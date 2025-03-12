@@ -1,4 +1,4 @@
-﻿<button>
+﻿<button @onclick="OnClick">
 	<div class="button-content">
 		<p>@Number</p>
 		<p>@Icon</p>
@@ -12,6 +12,8 @@
 </style>
 
 @code {
+	[Parameter] public EventCallback OnClick { get; set; }
+
 	[Parameter]
 	public int Number { get; set; }
 
@@ -20,6 +22,18 @@
 
 	protected override void OnParametersSet()
 	{
-
 	}
 }
+
+@*private string GetSuitIcon(string suit)
+{
+    return suit switch
+    {
+        "club" => "♣",
+        "diamond" => "♦",
+        "heart" => "♥",
+        "spade" => "♠",
+        _ => "?"
+    };
+}
+*@

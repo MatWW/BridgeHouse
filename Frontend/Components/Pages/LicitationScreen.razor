@@ -2,6 +2,8 @@
 
 @page "/licitation-screen"
 
+@rendermode InteractiveServer
+
 <div class="licitation">
 	<div class="licitation-container">
 		<div class="licitation-screen">
@@ -28,40 +30,36 @@
 			</div>
 			<div class="panel-box-2">
 				<div class="clubs">
-					<BiddingButton Number="1" Icon="♣" />
-					<BiddingButton Number="2" Icon="♣" />
-					<BiddingButton Number="3" Icon="♣" />
-					<BiddingButton Number="4" Icon="♣" />
-					<BiddingButton Number="5" Icon="♣" />
-					<BiddingButton Number="6" Icon="♣" />
-					<BiddingButton Number="7" Icon="♣" />
+					@for (int i = @lowestClub; i <= 7; i++)
+					{
+						int currentNumber = i;
+						string suit = "club";
+						<BiddingButton OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♣" />
+					}
 				</div>
 				<div class="diamonds">
-					<BiddingButton Number="1" Icon="♦" />
-					<BiddingButton Number="2" Icon="♦" />
-					<BiddingButton Number="3" Icon="♦" />
-					<BiddingButton Number="4" Icon="♦" />
-					<BiddingButton Number="5" Icon="♦" />
-					<BiddingButton Number="6" Icon="♦" />
-					<BiddingButton Number="7" Icon="♦" />
+					@for (int i = @lowestDiamond; i <= 7; i++)
+					{
+						int currentNumber = i;
+						string suit = "diamond";
+						<BiddingButton OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♦" />
+					}
 				</div>
 				<div class="hearts">
-					<BiddingButton Number="1" Icon="♥" />
-					<BiddingButton Number="2" Icon="♥" />
-					<BiddingButton Number="3" Icon="♥" />
-					<BiddingButton Number="4" Icon="♥" />
-					<BiddingButton Number="5" Icon="♥" />
-					<BiddingButton Number="6" Icon="♥" />
-					<BiddingButton Number="7" Icon="♥" />
+					@for (int i = @lowestHeart; i <= 7; i++)
+					{
+						int currentNumber = i;
+						string suit = "heart";
+						<BiddingButton OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♥" />
+					}
 				</div>
 				<div class="spades">
-					<BiddingButton Number="1" Icon="♠" />
-					<BiddingButton Number="2" Icon="♠" />
-					<BiddingButton Number="3" Icon="♠" />
-					<BiddingButton Number="4" Icon="♠" />
-					<BiddingButton Number="5" Icon="♠" />
-					<BiddingButton Number="6" Icon="♠" />
-					<BiddingButton Number="7" Icon="♠" />
+					@for (int i = @lowestSpade; i <= 7; i++)
+					{
+						int currentNumber = i;
+						string suit = "spade";
+						<BiddingButton OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♠" />
+					}
 				</div>
 			</div>
 		</div>
@@ -70,5 +68,39 @@
 
 
 @code {
+	private int lowestClub = 1;
+	private int lowestDiamond = 1;
+	private int lowestHeart = 1;
+	private int lowestSpade = 1;
 
+	private void HandleClubButtonClick(int i, string suit)
+	{
+		lowestClub = i;
+		lowestDiamond = i;
+		lowestHeart = i;
+		lowestSpade = i;
+
+		switch (suit) 
+		{
+			case "spade":
+				lowestSpade = i + 1;
+				lowestHeart = i + 1;
+				lowestDiamond = i + 1;
+				lowestClub = i + 1;
+				break;
+			case "heart":
+				lowestHeart = i + 1;
+				lowestDiamond = i + 1;
+				lowestClub = i + 1;
+				break;
+			case "diamond":
+				lowestDiamond = i + 1;
+				lowestClub = i + 1;
+				break;
+			case "club":
+				lowestClub = i + 1;
+				break;
+		}
+		
+	}
 }
