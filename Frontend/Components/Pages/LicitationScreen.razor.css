@@ -4,6 +4,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color: gray;
 }
 
 .licitation-container {
@@ -47,4 +48,36 @@
     height: 175px;
     width: 600px;
     margin-top: 20px;
+    display: grid;
+    grid-template-columns: 2fr 5fr
+}
+
+.panel-box-2 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+.clubs {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.diamonds {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.hearts {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.spades {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.panel-box-1 {
+
 }

@@ -1,4 +1,6 @@
-﻿@page "/licitation-screen"
+﻿@using Frontend.Components.Shared
+
+@page "/licitation-screen"
 
 <div class="licitation">
 	<div class="licitation-container">
@@ -19,6 +21,49 @@
 			</div>
 		</div>
 		<div class="bidding-panel">
+			<div class="panel-box-1">
+				<button>Pass</button>
+				<button>X</button>
+				<button>XX</button>
+			</div>
+			<div class="panel-box-2">
+				<div class="clubs">
+					<BiddingButton Number="1" Icon="♣" />
+					<BiddingButton Number="2" Icon="♣" />
+					<BiddingButton Number="3" Icon="♣" />
+					<BiddingButton Number="4" Icon="♣" />
+					<BiddingButton Number="5" Icon="♣" />
+					<BiddingButton Number="6" Icon="♣" />
+					<BiddingButton Number="7" Icon="♣" />
+				</div>
+				<div class="diamonds">
+					<BiddingButton Number="1" Icon="♦" />
+					<BiddingButton Number="2" Icon="♦" />
+					<BiddingButton Number="3" Icon="♦" />
+					<BiddingButton Number="4" Icon="♦" />
+					<BiddingButton Number="5" Icon="♦" />
+					<BiddingButton Number="6" Icon="♦" />
+					<BiddingButton Number="7" Icon="♦" />
+				</div>
+				<div class="hearts">
+					<BiddingButton Number="1" Icon="♥" />
+					<BiddingButton Number="2" Icon="♥" />
+					<BiddingButton Number="3" Icon="♥" />
+					<BiddingButton Number="4" Icon="♥" />
+					<BiddingButton Number="5" Icon="♥" />
+					<BiddingButton Number="6" Icon="♥" />
+					<BiddingButton Number="7" Icon="♥" />
+				</div>
+				<div class="spades">
+					<BiddingButton Number="1" Icon="♠" />
+					<BiddingButton Number="2" Icon="♠" />
+					<BiddingButton Number="3" Icon="♠" />
+					<BiddingButton Number="4" Icon="♠" />
+					<BiddingButton Number="5" Icon="♠" />
+					<BiddingButton Number="6" Icon="♠" />
+					<BiddingButton Number="7" Icon="♠" />
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

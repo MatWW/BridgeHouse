@@ -1,0 +1,25 @@
+﻿<button>
+	<div class="button-content">
+		<p>@Number</p>
+		<p>@Icon</p>
+	</div>
+</button>
+
+<style>
+	.button-content {
+		display: flex;
+	}
+</style>
+
+@code {
+	[Parameter]
+	public int Number { get; set; }
+
+	[Parameter]
+	public string Icon { get; set; }
+
+	protected override void OnParametersSet()
+	{
+
+	}
+}
