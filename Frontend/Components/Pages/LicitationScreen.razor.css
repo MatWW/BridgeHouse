@@ -21,6 +21,7 @@
     height: 350px;
     width: 600px;
     background-color: lightyellow;
+    overflow: auto;
 }
 
 .players {
@@ -103,4 +104,11 @@
 .bids {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.bidded {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
 }

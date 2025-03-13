@@ -23,18 +23,20 @@
 			</div>
 			<div class="bids">
 				@foreach (var bid in bids) {
-					<p>@bid.Key @bid.Value</p>
+					<div class="bidded">
+						<p>@bid.Key @bid.Value</p>
+					</div>
 				}
 			</div>
 		</div>
 		<div class="bidding-panel">
 			<div class="panel-box-1">
 				<div class="pass">
-					<button>Pass</button>
+					<button @onclick="HandlePassButtonClick">Pass</button>
 				</div>
 				<div class="x-and-xx">
-					<button>X</button>
-					<button>XX</button>
+					<button @onclick="HandleXButtonClick">X</button>
+					<button @onclick="HandleXXButtonClick">XX</button>
 				</div>
 			</div>
 			<div class="panel-box-2">
@@ -43,7 +45,7 @@
 					{
 						int currentNumber = i;
 						string suit = "club";
-						<BiddingButton Class="@(currentNumber < lowestClub ? "hidden" : "")" OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♣" />
+						<BiddingButton Class="@(currentNumber < lowestClub ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♣" />
 					}
 				</div>
 				<div class="diamonds">
@@ -51,7 +53,7 @@
 					{
 						int currentNumber = i;
 						string suit = "diamond";
-						<BiddingButton Class="@(currentNumber < lowestDiamond ? "hidden" : "")" OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♦" />
+						<BiddingButton Class="@(currentNumber < lowestDiamond ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♦" />
 					}
 				</div>
 				<div class="hearts">
@@ -59,7 +61,7 @@
 					{
 						int currentNumber = i;
 						string suit = "heart";
-						<BiddingButton Class="@(currentNumber < lowestHeart ? "hidden" : "")" OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♥" />
+						<BiddingButton Class="@(currentNumber < lowestHeart ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♥" />
 					}
 				</div>
 				<div class="spades">
@@ -67,7 +69,7 @@
 					{
 						int currentNumber = i;
 						string suit = "spade";
-						<BiddingButton Class="@(currentNumber < lowestSpade ? "hidden" : "")" OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♠" />
+						<BiddingButton Class="@(currentNumber < lowestSpade ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♠" />
 					}
 				</div>
 			</div>
@@ -82,9 +84,9 @@
 	private int lowestHeart = 1;
 	private int lowestSpade = 1;
 	private int currentPlayer = 0;
-	private List<KeyValuePair<int, string>> bids = [];
+	private List<KeyValuePair<int?, string>> bids = [];
 
-	private void HandleClubButtonClick(int i, string suit)
+	private void HandleSuitButtonClick(int i, string suit)
 	{
 		lowestClub = i;
 		lowestDiamond = i;
@@ -113,6 +115,31 @@
 				break;
 		}
 
-		bids.Add(new KeyValuePair<int, string>(i, suit));
+		bids.Add(new KeyValuePair<int?, string>(i, GetSuitIcon(suit)));
+	}
+
+	private void HandlePassButtonClick() {
+		bids.Add(new KeyValuePair<int?, string>(null, "PASS"));
+	}
+
+	private void HandleXButtonClick() {
+		bids.Add(new KeyValuePair<int?, string>(null, "X"));
+	}
+
+	private void HandleXXButtonClick()
+	{
+		bids.Add(new KeyValuePair<int?, string>(null, "XX"));
+	}
+
+	private string GetSuitIcon(string suit)
+	{
+		return suit switch
+		{
+			"club" => "♣",
+			"diamond" => "♦",
+			"heart" => "♥",
+			"spade" => "♠",
+			_ => "?"
+		};
 	}
 }
