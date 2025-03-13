@@ -4,24 +4,30 @@
 
 @rendermode InteractiveServer
 
+@inject NavigationManager Navigation
+
 <div class="licitation">
 	<div class="licitation-container">
 		<div class="licitation-screen">
 			<div class="players">
 				<div class="player">
-					<p>Player 1</p>
+					<p>W</p>
 				</div>
 				<div class="player">
-					<p>Player 2</p>
+					<p>N</p>
 				</div>
 				<div class="player">
-					<p>Player 3</p>
+					<p>E</p>
 				</div>
 				<div class="player player4">
-					<p>Player 4</p>
+					<p>S</p>
 				</div>
 			</div>
 			<div class="bids">
+				@for (int i = 0; i < GetPlayerWhoStartsAsNumber(); i++)
+				{
+					<div></div>
+				}
 				@foreach (var bid in bids) {
 					<div class="bidded">
 						<p>@bid.Key @bid.Value</p>
@@ -35,8 +41,8 @@
 					<button @onclick="HandlePassButtonClick">Pass</button>
 				</div>
 				<div class="x-and-xx">
-					<button @onclick="HandleXButtonClick">X</button>
-					<button @onclick="HandleXXButtonClick">XX</button>
+					<button class="@(CanDouble() ? "" : "hidden")" @onclick="HandleXButtonClick">X</button>
+					<button class="@(CanRedouble() ? "" : "hidden")" @onclick="HandleXXButtonClick">XX</button>
 				</div>
 			</div>
 			<div class="panel-box-2">
@@ -72,6 +78,14 @@
 						<BiddingButton Class="@(currentNumber < lowestSpade ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♠" />
 					}
 				</div>
+				<div class="no-trumps">
+					@for (int i = 1; i <= 7; i++)
+					{
+						int currentNumber = i;
+						string suit = "noTrump";
+						<BiddingButton Class="@(currentNumber < lowestNoTrump ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="NT" />
+					}
+				</div>
 			</div>
 		</div>
 	</div>
@@ -83,8 +97,15 @@
 	private int lowestDiamond = 1;
 	private int lowestHeart = 1;
 	private int lowestSpade = 1;
-	private int currentPlayer = 0;
+	private int lowestNoTrump = 1;
+	private Player startingPlayer = Player.S;
+	private Player currentPlayer = Player.S;
 	private List<KeyValuePair<int?, string>> bids = [];
+	private (int, string) currentWinning = (0, "");
+	private bool isDoubled = false;
+	private bool isRedoubled = false;
+	private bool isUndoubledBidPlaced = false;
+	private Player whoPlacedLastBid = Player.NONE;
 
 	private void HandleSuitButtonClick(int i, string suit)
 	{
@@ -92,9 +113,17 @@
 		lowestDiamond = i;
 		lowestHeart = i;
 		lowestSpade = i;
+		lowestNoTrump = i;
 
 		switch (suit) 
 		{
+			case "noTrump":
+				lowestNoTrump = i + 1;
+				lowestSpade = i + 1;
+				lowestHeart = i + 1;
+				lowestDiamond = i + 1;
+				lowestClub = i + 1;
+				break;
 			case "spade":
 				lowestSpade = i + 1;
 				lowestHeart = i + 1;
@@ -116,19 +145,45 @@
 		}
 
 		bids.Add(new KeyValuePair<int?, string>(i, GetSuitIcon(suit)));
+
+		currentWinning = (i, suit);
+		isDoubled = false;
+		isRedoubled = false;
+
+		whoPlacedLastBid = currentPlayer;
+
+		isUndoubledBidPlaced = true;
+
+		ChangeCurrentPlayer();
 	}
 
 	private void HandlePassButtonClick() {
 		bids.Add(new KeyValuePair<int?, string>(null, "PASS"));
+
+		if (CheckIfThreePasses())
+		{
+			Console.WriteLine(currentWinning);
+			Console.WriteLine(isDoubled);
+			Console.WriteLine(isRedoubled);
+			Navigation.NavigateTo("/");
+		}
+
+		ChangeCurrentPlayer();
 	}
 
 	private void HandleXButtonClick() {
 		bids.Add(new KeyValuePair<int?, string>(null, "X"));
+		isDoubled = true;
+		isUndoubledBidPlaced = false;
+		ChangeCurrentPlayer();
 	}
 
 	private void HandleXXButtonClick()
 	{
 		bids.Add(new KeyValuePair<int?, string>(null, "XX"));
+		isDoubled = false;
+		isRedoubled = true;
+		ChangeCurrentPlayer();
 	}
 
 	private string GetSuitIcon(string suit)
@@ -139,7 +194,95 @@
 			"diamond" => "♦",
 			"heart" => "♥",
 			"spade" => "♠",
+			"noTrump" => "NT",
 			_ => "?"
+		};
+	}
+
+	private bool CheckIfThreePasses () 
+	{
+		int length = bids.Count();
+
+		if (length > 3 && bids[length - 1].Value == "PASS" && bids[length - 2].Value == "PASS" && bids[length - 3].Value == "PASS") {
+			return true;
+		}
+
+		return false;
+	}
+
+	private void ChangeCurrentPlayer () 
+	{
+		switch (currentPlayer) 
+		{
+			case Player.W:
+				currentPlayer = Player.N;
+				break;
+			case Player.N:
+				currentPlayer = Player.E;
+				break;
+			case Player.E:
+				currentPlayer = Player.S;
+				break;
+			case Player.S:
+				currentPlayer = Player.W;
+				break;
+		}
+	}
+
+	private bool CanDouble() 
+	{
+		if (isUndoubledBidPlaced)
+		{
+			if ((currentPlayer == Player.W || currentPlayer == Player.E) && (whoPlacedLastBid == Player.N || whoPlacedLastBid == Player.S))
+			{
+				return true;
+			}
+
+			if ((currentPlayer == Player.N || currentPlayer == Player.S) && (whoPlacedLastBid == Player.W || whoPlacedLastBid == Player.E))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private bool CanRedouble()
+	{
+		if (isDoubled)
+		{
+			if ((currentPlayer == Player.W || currentPlayer == Player.E) && (whoPlacedLastBid == Player.W || whoPlacedLastBid == Player.E))
+			{
+				return true;
+			}
+
+			if ((currentPlayer == Player.N || currentPlayer == Player.S) && (whoPlacedLastBid == Player.N || whoPlacedLastBid == Player.S))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	enum Player 
+	{
+		W,
+		N,
+		E,
+		S,
+		NONE
+	}
+
+	private int GetPlayerWhoStartsAsNumber()
+	{
+		return startingPlayer switch
+		{
+			Player.W => 0,
+			Player.N => 1,
+			Player.E => 2,
+			Player.S => 3,
+			_ => 0
 		};
 	}
 }
