@@ -21,6 +21,11 @@
 					<p>Player 4</p>
 				</div>
 			</div>
+			<div class="bids">
+				@foreach (var bid in bids) {
+					<p>@bid.Key @bid.Value</p>
+				}
+			</div>
 		</div>
 		<div class="bidding-panel">
 			<div class="panel-box-1">
@@ -30,35 +35,35 @@
 			</div>
 			<div class="panel-box-2">
 				<div class="clubs">
-					@for (int i = @lowestClub; i <= 7; i++)
+					@for (int i = 1; i <= 7; i++)
 					{
 						int currentNumber = i;
 						string suit = "club";
-						<BiddingButton OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♣" />
+						<BiddingButton Class="@(currentNumber < lowestClub ? "hidden" : "")" OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♣" />
 					}
 				</div>
 				<div class="diamonds">
-					@for (int i = @lowestDiamond; i <= 7; i++)
+					@for (int i = 1; i <= 7; i++)
 					{
 						int currentNumber = i;
 						string suit = "diamond";
-						<BiddingButton OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♦" />
+						<BiddingButton Class="@(currentNumber < lowestDiamond ? "hidden" : "")" OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♦" />
 					}
 				</div>
 				<div class="hearts">
-					@for (int i = @lowestHeart; i <= 7; i++)
+					@for (int i = 1; i <= 7; i++)
 					{
 						int currentNumber = i;
 						string suit = "heart";
-						<BiddingButton OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♥" />
+						<BiddingButton Class="@(currentNumber < lowestHeart ? "hidden" : "")" OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♥" />
 					}
 				</div>
 				<div class="spades">
-					@for (int i = @lowestSpade; i <= 7; i++)
+					@for (int i = 1; i <= 7; i++)
 					{
 						int currentNumber = i;
 						string suit = "spade";
-						<BiddingButton OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♠" />
+						<BiddingButton Class="@(currentNumber < lowestSpade ? "hidden" : "")" OnClick="() => HandleClubButtonClick(currentNumber, suit)" Number=currentNumber Icon="♠" />
 					}
 				</div>
 			</div>
@@ -72,6 +77,8 @@
 	private int lowestDiamond = 1;
 	private int lowestHeart = 1;
 	private int lowestSpade = 1;
+	private int currentPlayer = 0;
+	private List<KeyValuePair<int, string>> bids = [];
 
 	private void HandleClubButtonClick(int i, string suit)
 	{
@@ -101,6 +108,7 @@
 				lowestClub = i + 1;
 				break;
 		}
-		
+
+		bids.Add(new KeyValuePair<int, string>(i, suit));
 	}
 }

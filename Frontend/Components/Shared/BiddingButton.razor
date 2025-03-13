@@ -1,4 +1,4 @@
-﻿<button @onclick="OnClick">
+﻿<button class="@Class" @onclick="OnClick">
 	<div class="button-content">
 		<p>@Number</p>
 		<p>@Icon</p>
@@ -7,7 +7,11 @@
 
 <style>
 	.button-content {
-		display: flex;
+	display: flex;
+	}
+
+	.hidden {
+		visibility: hidden;
 	}
 </style>
 
@@ -20,9 +24,8 @@
 	[Parameter]
 	public string Icon { get; set; }
 
-	protected override void OnParametersSet()
-	{
-	}
+	[Parameter]
+	public string Class { get; set; } = "";
 }
 
 @*private string GetSuitIcon(string suit)

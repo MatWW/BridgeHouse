@@ -81,3 +81,8 @@
 .panel-box-1 {
 
 }
+
+.bids {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
