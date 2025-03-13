@@ -1,10 +1,11 @@
-﻿@using Frontend.Components.Shared
+﻿@using Microsoft.AspNetCore.SignalR.Client;
+@using Frontend.Components.Shared;
 
 @page "/licitation-screen"
 
-@rendermode InteractiveServer
-
 @inject NavigationManager Navigation
+
+@rendermode InteractiveServer
 
 <div class="licitation">
 	<div class="licitation-container">
@@ -106,6 +107,21 @@
 	private bool isRedoubled = false;
 	private bool isUndoubledBidPlaced = false;
 	private Player whoPlacedLastBid = Player.NONE;
+	private HubConnection? hubConnection;
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl(Navigation.ToAbsoluteUri("/gameHub"))
+			.WithAutomaticReconnect()
+			.Build();
+
+		hubConnection.On("Handle", CheckIfThreePasses);
+
+		await hubConnection.StartAsync();
+	}
+
 
 	private void HandleSuitButtonClick(int i, string suit)
 	{
@@ -157,8 +173,9 @@
 		ChangeCurrentPlayer();
 	}
 
-	private void HandlePassButtonClick() {
+	private async void HandlePassButtonClick() {
 		bids.Add(new KeyValuePair<int?, string>(null, "PASS"));
+		await hubConnection.InvokeAsync("Costam");
 
 		if (CheckIfThreePasses())
 		{
@@ -201,6 +218,8 @@
 
 	private bool CheckIfThreePasses () 
 	{
+		Console.WriteLine("Hello!");
+
 		int length = bids.Count();
 
 		if (length > 3 && bids[length - 1].Value == "PASS" && bids[length - 2].Value == "PASS" && bids[length - 3].Value == "PASS") {
