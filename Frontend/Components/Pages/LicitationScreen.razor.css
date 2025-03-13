@@ -4,7 +4,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: gray;
+    background-color: floralwhite;
 }
 
 .licitation-container {
@@ -17,8 +17,10 @@
 
 .licitation-screen {
     border: 2px solid black;
+    border-radius: 15px;
     height: 350px;
     width: 600px;
+    background-color: lightyellow;
 }
 
 .players {
@@ -45,11 +47,13 @@
 
 .bidding-panel {
     border: 2px solid black;
+    border-radius: 15px;
     height: 175px;
     width: 600px;
     margin-top: 20px;
     display: grid;
-    grid-template-columns: 2fr 5fr
+    grid-template-columns: 2fr 5fr;
+    background-color: lightyellow;
 }
 
 .panel-box-2 {
@@ -79,7 +83,21 @@
 }
 
 .panel-box-1 {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
 
+.pass {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.x-and-xx {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
 }
 
 .bids {
