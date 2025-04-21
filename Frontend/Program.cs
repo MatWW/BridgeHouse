@@ -1,11 +1,13 @@
 using Frontend.Components;
 using Frontend.Hubs;
+using Frontend.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddSignalR();
+//builder.Services.AddSingleton<SignalRService>();
 
 var app = builder.Build();
 

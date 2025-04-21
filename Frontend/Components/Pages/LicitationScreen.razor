@@ -1,9 +1,12 @@
 ﻿@using Microsoft.AspNetCore.SignalR.Client;
 @using Frontend.Components.Shared;
+@using Frontend.Services;
 
 @page "/licitation-screen"
 
 @inject NavigationManager Navigation
+
+@implements IAsyncDisposable
 
 @rendermode InteractiveServer
 
@@ -107,7 +110,8 @@
 	private bool isRedoubled = false;
 	private bool isUndoubledBidPlaced = false;
 	private Player whoPlacedLastBid = Player.NONE;
-	private HubConnection? hubConnection;
+	private Action? handleSignalRHandler;
+	HubConnection? hubConnection;
 
 
 	protected override async Task OnInitializedAsync()
@@ -117,7 +121,9 @@
 			.WithAutomaticReconnect()
 			.Build();
 
-		hubConnection.On("Handle", CheckIfThreePasses);
+		handleSignalRHandler = () => HandlePassButtonClick();
+
+		hubConnection?.On("Handle", handleSignalRHandler);
 
 		await hubConnection.StartAsync();
 	}
@@ -131,7 +137,7 @@
 		lowestSpade = i;
 		lowestNoTrump = i;
 
-		switch (suit) 
+		switch (suit)
 		{
 			case "noTrump":
 				lowestNoTrump = i + 1;
@@ -173,9 +179,8 @@
 		ChangeCurrentPlayer();
 	}
 
-	private async void HandlePassButtonClick() {
+	private async Task HandlePassButtonClick() {
 		bids.Add(new KeyValuePair<int?, string>(null, "PASS"));
-		await hubConnection.InvokeAsync("Costam");
 
 		if (CheckIfThreePasses())
 		{
@@ -216,7 +221,7 @@
 		};
 	}
 
-	private bool CheckIfThreePasses () 
+	private bool CheckIfThreePasses() 
 	{
 		Console.WriteLine("Hello!");
 
@@ -229,7 +234,12 @@
 		return false;
 	}
 
-	private void ChangeCurrentPlayer () 
+	private async Task TestSignalR()
+	{
+		await hubConnection.InvokeAsync("Costam");
+	}
+
+	private void ChangeCurrentPlayer() 
 	{
 		switch (currentPlayer) 
 		{
@@ -303,5 +313,15 @@
 			Player.S => 3,
 			_ => 0
 		};
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (hubConnection is not null && handleSignalRHandler is not null)
+		{
+			hubConnection.Remove("Handle");
+		}
+
+		await hubConnection.StopAsync(); // Zakładam, że twój serwis to obsługuje
 	}
 }
