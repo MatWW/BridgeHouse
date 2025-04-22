@@ -129,14 +129,8 @@
 	}
 
 
-	private void HandleSuitButtonClick(int i, string suit)
+	private async Task HandleSuitButtonClick(int i, string suit)
 	{
-		lowestClub = i;
-		lowestDiamond = i;
-		lowestHeart = i;
-		lowestSpade = i;
-		lowestNoTrump = i;
-
 		switch (suit)
 		{
 			case "noTrump":
@@ -147,21 +141,31 @@
 				lowestClub = i + 1;
 				break;
 			case "spade":
+				lowestNoTrump = i;
 				lowestSpade = i + 1;
 				lowestHeart = i + 1;
 				lowestDiamond = i + 1;
 				lowestClub = i + 1;
 				break;
 			case "heart":
+				lowestNoTrump = i;
+				lowestSpade = i;
 				lowestHeart = i + 1;
 				lowestDiamond = i + 1;
 				lowestClub = i + 1;
 				break;
 			case "diamond":
+				lowestNoTrump = i;
+				lowestSpade = i;
+				lowestHeart = i;
 				lowestDiamond = i + 1;
 				lowestClub = i + 1;
 				break;
 			case "club":
+				lowestNoTrump = i;
+				lowestSpade = i;
+				lowestHeart = i;
+				lowestDiamond = i;
 				lowestClub = i + 1;
 				break;
 		}
