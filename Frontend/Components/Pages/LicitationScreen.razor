@@ -1,12 +1,12 @@
-﻿@using Microsoft.AspNetCore.SignalR.Client;
-@using Frontend.Components.Shared;
+﻿@using Frontend.Components.Shared;
 @using Frontend.Services;
+@using Extensions
+@using Frontend.Models;
 
 @page "/licitation-screen"
 
 @inject NavigationManager Navigation
-
-@implements IAsyncDisposable
+@inject IDistributedCache cache;
 
 @rendermode InteractiveServer
 
@@ -32,7 +32,7 @@
 				{
 					<div></div>
 				}
-				@foreach (var bid in bids) {
+				@foreach (var bid in biddingState.Bids) {
 					<div class="bidded">
 						<p>@bid.Key @bid.Value</p>
 					</div>
@@ -55,7 +55,7 @@
 					{
 						int currentNumber = i;
 						string suit = "club";
-						<BiddingButton Class="@(currentNumber < lowestClub ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♣" />
+						<BiddingButton Class="@(currentNumber < biddingState.LowestClub ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♣" />
 					}
 				</div>
 				<div class="diamonds">
@@ -63,7 +63,7 @@
 					{
 						int currentNumber = i;
 						string suit = "diamond";
-						<BiddingButton Class="@(currentNumber < lowestDiamond ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♦" />
+						<BiddingButton Class="@(currentNumber < biddingState.LowestDiamond ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♦" />
 					}
 				</div>
 				<div class="hearts">
@@ -71,7 +71,7 @@
 					{
 						int currentNumber = i;
 						string suit = "heart";
-						<BiddingButton Class="@(currentNumber < lowestHeart ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♥" />
+						<BiddingButton Class="@(currentNumber < biddingState.LowestHeart ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♥" />
 					}
 				</div>
 				<div class="spades">
@@ -79,7 +79,7 @@
 					{
 						int currentNumber = i;
 						string suit = "spade";
-						<BiddingButton Class="@(currentNumber < lowestSpade ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♠" />
+						<BiddingButton Class="@(currentNumber < biddingState.LowestSpade ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="♠" />
 					}
 				</div>
 				<div class="no-trumps">
@@ -87,7 +87,7 @@
 					{
 						int currentNumber = i;
 						string suit = "noTrump";
-						<BiddingButton Class="@(currentNumber < lowestNoTrump ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="NT" />
+						<BiddingButton Class="@(currentNumber < biddingState.LowestNoTrump ? "hidden" : "")" OnClick="() => HandleSuitButtonClick(currentNumber, suit)" Number=currentNumber Icon="NT" />
 					}
 				</div>
 			</div>
@@ -97,100 +97,71 @@
 
 
 @code {
-	private int lowestClub = 1;
-	private int lowestDiamond = 1;
-	private int lowestHeart = 1;
-	private int lowestSpade = 1;
-	private int lowestNoTrump = 1;
-	private Player startingPlayer = Player.S;
-	private Player currentPlayer = Player.S;
-	private List<KeyValuePair<int?, string>> bids = [];
-	private (int, string) currentWinning = (0, "");
-	private bool isDoubled = false;
-	private bool isRedoubled = false;
-	private bool isUndoubledBidPlaced = false;
-	private Player whoPlacedLastBid = Player.NONE;
-	private Action? handleSignalRHandler;
-	HubConnection? hubConnection;
 
+	private BiddingState biddingState = new BiddingState();
 
-	protected override async Task OnInitializedAsync()
-	{
-		hubConnection = new HubConnectionBuilder()
-			.WithUrl(Navigation.ToAbsoluteUri("/gameHub"))
-			.WithAutomaticReconnect()
-			.Build();
-
-		handleSignalRHandler = () => HandlePassButtonClick();
-
-		hubConnection?.On("Handle", handleSignalRHandler);
-
-		await hubConnection.StartAsync();
-	}
-
-
-	private async Task HandleSuitButtonClick(int i, string suit)
+	private void HandleSuitButtonClick(int i, string suit)
 	{
 		switch (suit)
 		{
 			case "noTrump":
-				lowestNoTrump = i + 1;
-				lowestSpade = i + 1;
-				lowestHeart = i + 1;
-				lowestDiamond = i + 1;
-				lowestClub = i + 1;
-				break;
-			case "spade":
-				lowestNoTrump = i;
-				lowestSpade = i + 1;
-				lowestHeart = i + 1;
-				lowestDiamond = i + 1;
-				lowestClub = i + 1;
-				break;
-			case "heart":
-				lowestNoTrump = i;
-				lowestSpade = i;
-				lowestHeart = i + 1;
-				lowestDiamond = i + 1;
-				lowestClub = i + 1;
-				break;
-			case "diamond":
-				lowestNoTrump = i;
-				lowestSpade = i;
-				lowestHeart = i;
-				lowestDiamond = i + 1;
-				lowestClub = i + 1;
-				break;
-			case "club":
-				lowestNoTrump = i;
-				lowestSpade = i;
-				lowestHeart = i;
-				lowestDiamond = i;
-				lowestClub = i + 1;
-				break;
+				biddingState.LowestNoTrump = i + 1;
+				biddingState.LowestSpade = i + 1;
+				biddingState.LowestHeart = i + 1;
+				biddingState.LowestDiamond = i + 1;
+				biddingState.LowestClub = i + 1;
+ 				break;
+ 			case "spade":
+ 				biddingState.LowestNoTrump = i;
+ 				biddingState.LowestSpade = i + 1;
+ 				biddingState.LowestHeart = i + 1;
+ 				biddingState.LowestDiamond = i + 1;
+ 				biddingState.LowestClub = i + 1;
+ 				break;
+ 			case "heart":
+				biddingState.LowestNoTrump = i;
+				biddingState.LowestSpade = i;
+				biddingState.LowestHeart = i + 1;
+				biddingState.LowestDiamond = i + 1;
+				biddingState.LowestClub = i + 1;
+ 				break;
+ 			case "diamond":
+				biddingState.LowestNoTrump = i;
+				biddingState.LowestSpade = i;
+				biddingState.LowestHeart = i;
+				biddingState.LowestDiamond = i + 1;
+				biddingState.LowestClub = i + 1;
+ 				break;
+ 			case "club":
+				biddingState.LowestNoTrump = i;
+				biddingState.LowestSpade = i;
+				biddingState.LowestHeart = i;
+				biddingState.LowestDiamond = i;
+				biddingState.LowestClub = i + 1;
+ 				break;
 		}
 
-		bids.Add(new KeyValuePair<int?, string>(i, GetSuitIcon(suit)));
+		biddingState.Bids.Add(new KeyValuePair<int?, string>(i, GetSuitIcon(suit)));
 
-		currentWinning = (i, suit);
-		isDoubled = false;
-		isRedoubled = false;
+		biddingState.CurrentWinningBid = (i, suit);
+		biddingState.IsDoubled = false;
+		biddingState.IsRedoubled = false;
 
-		whoPlacedLastBid = currentPlayer;
+		biddingState.WhoPlacedLastBid = biddingState.CurrentPlayer;
 
-		isUndoubledBidPlaced = true;
+		biddingState.IsUndoubledBidPlaced = true;
 
 		ChangeCurrentPlayer();
 	}
 
-	private async Task HandlePassButtonClick() {
-		bids.Add(new KeyValuePair<int?, string>(null, "PASS"));
+	private void HandlePassButtonClick() {
+		biddingState.Bids.Add(new KeyValuePair<int?, string>(null, "PASS"));
 
 		if (CheckIfThreePasses())
 		{
-			Console.WriteLine(currentWinning);
-			Console.WriteLine(isDoubled);
-			Console.WriteLine(isRedoubled);
+			Console.WriteLine(biddingState.CurrentWinningBid);
+			Console.WriteLine(biddingState.IsDoubled);
+			Console.WriteLine(biddingState.IsRedoubled);
 			Navigation.NavigateTo("/");
 		}
 
@@ -198,17 +169,17 @@
 	}
 
 	private void HandleXButtonClick() {
-		bids.Add(new KeyValuePair<int?, string>(null, "X"));
-		isDoubled = true;
-		isUndoubledBidPlaced = false;
+		biddingState.Bids.Add(new KeyValuePair<int?, string>(null, "X"));
+		biddingState.IsDoubled = true;
+		biddingState.IsUndoubledBidPlaced = false;
 		ChangeCurrentPlayer();
 	}
 
 	private void HandleXXButtonClick()
 	{
-		bids.Add(new KeyValuePair<int?, string>(null, "XX"));
-		isDoubled = false;
-		isRedoubled = true;
+		biddingState.Bids.Add(new KeyValuePair<int?, string>(null, "XX"));
+		biddingState.IsDoubled = false;
+		biddingState.IsRedoubled = true;
 		ChangeCurrentPlayer();
 	}
 
@@ -229,49 +200,47 @@
 	{
 		Console.WriteLine("Hello!");
 
-		int length = bids.Count();
+		int length = biddingState.Bids.Count();
 
-		if (length > 3 && bids[length - 1].Value == "PASS" && bids[length - 2].Value == "PASS" && bids[length - 3].Value == "PASS") {
+		if (length > 3 && biddingState.Bids[length - 1].Value == "PASS" && 
+			biddingState.Bids[length - 2].Value == "PASS" && 
+			biddingState.Bids[length - 3].Value == "PASS")
+		{
 			return true;
 		}
 
 		return false;
 	}
 
-	private async Task TestSignalR()
-	{
-		await hubConnection.InvokeAsync("Costam");
-	}
-
 	private void ChangeCurrentPlayer() 
 	{
-		switch (currentPlayer) 
+		switch (biddingState.CurrentPlayer) 
 		{
 			case Player.W:
-				currentPlayer = Player.N;
+				biddingState.CurrentPlayer = Player.N;
 				break;
 			case Player.N:
-				currentPlayer = Player.E;
+				biddingState.CurrentPlayer = Player.E;
 				break;
 			case Player.E:
-				currentPlayer = Player.S;
+				biddingState.CurrentPlayer = Player.S;
 				break;
 			case Player.S:
-				currentPlayer = Player.W;
+				biddingState.CurrentPlayer = Player.W;
 				break;
 		}
 	}
 
 	private bool CanDouble() 
 	{
-		if (isUndoubledBidPlaced)
+		if (biddingState.IsUndoubledBidPlaced)
 		{
-			if ((currentPlayer == Player.W || currentPlayer == Player.E) && (whoPlacedLastBid == Player.N || whoPlacedLastBid == Player.S))
+			if ((biddingState.CurrentPlayer == Player.W || biddingState.CurrentPlayer == Player.E) && (biddingState.WhoPlacedLastBid == Player.N || biddingState.WhoPlacedLastBid == Player.S))
 			{
 				return true;
 			}
 
-			if ((currentPlayer == Player.N || currentPlayer == Player.S) && (whoPlacedLastBid == Player.W || whoPlacedLastBid == Player.E))
+			if ((biddingState.CurrentPlayer == Player.N || biddingState.CurrentPlayer == Player.S) && (biddingState.WhoPlacedLastBid == Player.W || biddingState.WhoPlacedLastBid == Player.E))
 			{
 				return true;
 			}
@@ -282,14 +251,14 @@
 
 	private bool CanRedouble()
 	{
-		if (isDoubled)
+		if (biddingState.IsDoubled)
 		{
-			if ((currentPlayer == Player.W || currentPlayer == Player.E) && (whoPlacedLastBid == Player.W || whoPlacedLastBid == Player.E))
+			if ((biddingState.CurrentPlayer == Player.W || biddingState.CurrentPlayer == Player.E) && (biddingState.WhoPlacedLastBid == Player.W || biddingState.WhoPlacedLastBid == Player.E))
 			{
 				return true;
 			}
 
-			if ((currentPlayer == Player.N || currentPlayer == Player.S) && (whoPlacedLastBid == Player.N || whoPlacedLastBid == Player.S))
+			if ((biddingState.CurrentPlayer == Player.N || biddingState.CurrentPlayer == Player.S) && (biddingState.WhoPlacedLastBid == Player.N || biddingState.WhoPlacedLastBid == Player.S))
 			{
 				return true;
 			}
@@ -298,18 +267,11 @@
 		return false;
 	}
 
-	enum Player 
-	{
-		W,
-		N,
-		E,
-		S,
-		NONE
-	}
+
 
 	private int GetPlayerWhoStartsAsNumber()
 	{
-		return startingPlayer switch
+		return biddingState.StartingPlayer switch
 		{
 			Player.W => 0,
 			Player.N => 1,
@@ -319,13 +281,4 @@
 		};
 	}
 
-	public async ValueTask DisposeAsync()
-	{
-		if (hubConnection is not null && handleSignalRHandler is not null)
-		{
-			hubConnection.Remove("Handle");
-		}
-
-		await hubConnection.StopAsync(); // Zakładam, że twój serwis to obsługuje
-	}
 }
