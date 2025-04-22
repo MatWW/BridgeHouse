@@ -3,8 +3,8 @@
 namespace Frontend.Hubs;
 public class BridgeHub : Hub
 {
-    public async Task Costam()
+    public async Task SendBidUpdated()
     {
-        await Clients.All.SendAsync("Handle");
+        await Clients.All.SendAsync("ReceiveBidUpdate");
     }
 }
