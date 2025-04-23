@@ -1,0 +1,19 @@
+﻿@page "/logout"
+
+@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager Navigation
+@inject ILogger<Logout> Logger
+
+<h3>Logging out...</h3>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("Logout started");
+        await SignInManager.SignOutAsync();
+        Logger.LogInformation("Logout successful");
+        //Navigation.NavigateTo("/");
+    }
+}
