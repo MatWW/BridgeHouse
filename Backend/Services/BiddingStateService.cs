@@ -15,7 +15,7 @@ public class BiddingStateService : IBiddingStateService
 
     public async Task<BiddingState?> GetCurrentBiddingStateAsync()
     {
-        return await cache.GetRecordAsync<BiddingState>("biddingState");
+        return await cache.GetRecordAsync<BiddingState?>("biddingState");
     }
 
     public async Task SetCurrentBiddingStateAsync(BiddingState biddingState)

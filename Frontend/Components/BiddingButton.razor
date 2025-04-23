@@ -1,0 +1,42 @@
+﻿<button class="@Class" @onclick="OnClick">
+	<div class="button-content">
+		<p>@Number</p>
+		<p>@Icon</p>
+	</div>
+</button>
+
+<style>
+	.button-content {
+		display: flex;
+	}
+
+	.hidden {
+		visibility: hidden;
+	}
+</style>
+
+@code {
+	[Parameter] public EventCallback OnClick { get; set; }
+
+	[Parameter]
+	public int Number { get; set; }
+
+	[Parameter]
+	public string Icon { get; set; }
+
+	[Parameter]
+	public string Class { get; set; } = "";
+}
+
+@*private string GetSuitIcon(string suit)
+{
+    return suit switch
+    {
+        "club" => "♣",
+        "diamond" => "♦",
+        "heart" => "♥",
+        "spade" => "♠",
+        _ => "?"
+    };
+}
+*@

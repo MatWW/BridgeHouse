@@ -16,10 +16,9 @@ namespace Backend.Controllers
         }
 
         [HttpGet("current")]
-        public async Task<ActionResult<BiddingState>> GetCurrentBiddingState()
+        public async Task<ActionResult<BiddingState?>> GetCurrentBiddingState()
         {
             var state = await biddingStateService.GetCurrentBiddingStateAsync();
-            if (state == null) return NotFound();
 
             return Ok(state);
         }
