@@ -1,11 +1,18 @@
 using Backend.Hubs;
 using Backend.Services;
+using Backend.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnection")));
 
 builder.Services.AddSignalR();
 
@@ -15,6 +22,11 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "RedisBridge_";
 });
 builder.Services.AddScoped<IBiddingStateService, BiddingStateService>();
+
+builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+    .AddEntityFrameworkStores<AppDbContext>();
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
@@ -42,7 +54,10 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 
+app.MapIdentityApi<IdentityUser>();
+
 app.UseAuthorization();
+app.UseAuthentication();
 
 app.MapHub<BridgeHub>("/gameHub");
 
