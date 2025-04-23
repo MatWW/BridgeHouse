@@ -28,4 +28,9 @@ public class AuthenticationService : IAuthenticationService
 
         return result;
     }
+
+    public async Task LogoutUser()
+    {
+        await signInManager.SignOutAsync();
+    }
 }

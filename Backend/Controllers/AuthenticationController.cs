@@ -44,5 +44,13 @@ namespace Backend.Controllers
                 return Unauthorized("Invalid credentials.");
             }
         }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await authenticationService.LogoutUser();
+
+            return Ok(new { message = "User logged out successfully" });
+        }
     }
 }
