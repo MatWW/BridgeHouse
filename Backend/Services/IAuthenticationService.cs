@@ -6,4 +6,5 @@ namespace Backend.Services;
 public interface IAuthenticationService
 {
     Task<IdentityResult> RegisterUser(RegistrationModel registrationModel);
+    Task<SignInResult> LoginUser(LoginModel loginModel);
 }

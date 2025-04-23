@@ -29,5 +29,20 @@ namespace Backend.Controllers
                 return BadRequest(result.Errors);
             }
         }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
+        {
+            var result = await authenticationService.LoginUser(loginModel);
+
+            if (result.Succeeded)
+            {
+                return Ok("Login successful");
+            }
+            else
+            {
+                return Unauthorized("Invalid credentials.");
+            }
+        }
     }
 }
