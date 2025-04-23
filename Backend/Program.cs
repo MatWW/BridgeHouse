@@ -23,10 +23,13 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 builder.Services.AddScoped<IBiddingStateService, BiddingStateService>();
 
-builder.Services.AddIdentityApiEndpoints<IdentityUser>()
-    .AddEntityFrameworkStores<AppDbContext>();
-
 builder.Services.AddAuthorization();
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 builder.Services.AddCors(options =>
 {
@@ -53,8 +56,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapControllers();
-
-app.MapIdentityApi<IdentityUser>();
 
 app.UseAuthorization();
 app.UseAuthentication();
