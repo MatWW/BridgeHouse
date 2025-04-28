@@ -3,6 +3,8 @@ using Backend.Services;
 using Backend.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
+using Backend.Repositories;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,8 +43,23 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<IBridgeTablesService, BridgeTablesService>();
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect("localhost")
+);
+
+builder.Services.AddScoped<IRedisBridgeTableRepository, RedisBridgeTableRepository>();
+builder.Services.AddScoped<IUserRepository,  UserRepository>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddProblemDetails();
+
+builder.Services.AddLogging();
 
 var app = builder.Build();
 
@@ -54,6 +71,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseExceptionHandler();
 
 app.MapControllers();
 

@@ -6,7 +6,7 @@ namespace Backend.Controllers
 {
     [ApiController]
     [Route("api/authentication")]
-    public class AuthenticationController : Controller
+    public class AuthenticationController : ControllerBase
     {
         private readonly IAuthenticationService authenticationService;
 
@@ -18,7 +18,7 @@ namespace Backend.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegistrationModel registrationModel)
         {
-            var result = await authenticationService.RegisterUser(registrationModel);
+            var result = await authenticationService.RegisterUserAsync(registrationModel);
 
             if (result.Succeeded)
             {
@@ -33,7 +33,7 @@ namespace Backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
-            var result = await authenticationService.LoginUser(loginModel);
+            var result = await authenticationService.LoginUserAsync(loginModel);
 
             if (result.Succeeded)
             {
@@ -48,7 +48,7 @@ namespace Backend.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            await authenticationService.LogoutUser();
+            await authenticationService.LogoutUserAsync();
 
             return Ok(new { message = "User logged out successfully" });
         }

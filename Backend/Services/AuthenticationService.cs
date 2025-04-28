@@ -14,7 +14,7 @@ public class AuthenticationService : IAuthenticationService
         this.signInManager = signInManager;
     }
 
-    public async Task<IdentityResult> RegisterUser(RegistrationModel registrationModel)
+    public async Task<IdentityResult> RegisterUserAsync(RegistrationModel registrationModel)
     {
         var user = new IdentityUser { UserName = registrationModel.UserName, Email = registrationModel.Email };
         var result = await userManager.CreateAsync(user, registrationModel.Password);
@@ -22,14 +22,14 @@ public class AuthenticationService : IAuthenticationService
         return result;
     }
 
-    public async Task<SignInResult> LoginUser(LoginModel loginModel)
+    public async Task<SignInResult> LoginUserAsync(LoginModel loginModel)
     {
         var result = await signInManager.PasswordSignInAsync(loginModel.UserName, loginModel.Password, isPersistent: false, lockoutOnFailure: false);
 
         return result;
     }
 
-    public async Task LogoutUser()
+    public async Task LogoutUserAsync()
     {
         await signInManager.SignOutAsync();
     }
