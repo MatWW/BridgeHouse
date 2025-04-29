@@ -1,5 +1,8 @@
-﻿namespace Backend.Services;
+﻿using Shared;
 
-public class IGameService
+namespace Backend.Services;
+
+public interface IGameService
 {
+    Task PlaceBid(long gameId, BidAction bidAction);
 }

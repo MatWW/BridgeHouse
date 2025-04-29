@@ -72,7 +72,7 @@ public class GameService : IGameService
             throw new UnauthorizedGameActionException($"Player mismatch in bid action");
     }
 
-    private bool IsBidValid(Bid bid, PlayerInfo bidder, Contract? currentContract)
+    private bool IsBidValid(Bid bid, Player bidder, Contract? currentContract)
     {
         if (bid.Value == BiddingValue.PASS)
         {
@@ -109,7 +109,7 @@ public class GameService : IGameService
         return b1.Value > b2.Value || (b1.Value == b2.Value && b1.Suit > b2.Suit);
     }
 
-    private static bool IsCurrentContractBiddedByOpponent(Bid bid, PlayerInfo bidder, Contract contract)
+    private static bool IsCurrentContractBiddedByOpponent(Bid bid, Player bidder, Contract contract)
     {
         return !AreTeammates(bidder.Position, contract.BidAction.Player.Position);
     }
@@ -160,7 +160,7 @@ public class GameService : IGameService
         [Position.W] = Position.N
     };
 
-    private static string GetNextPlayerId(GameState gameState, PlayerInfo bidder)
+    private static string GetNextPlayerId(GameState gameState, Player bidder)
     {
         var nextPosition = NextClockwise[bidder.Position];
         return gameState.Players.First(p => p.Position == nextPosition).PlayerId;
@@ -174,7 +174,7 @@ public class GameService : IGameService
         [Position.W] = Position.E
     };
 
-    private static PlayerInfo GetDummy(GameState gameState, PlayerInfo declarer)
+    private static Player GetDummy(GameState gameState, Player declarer)
     {
         var dummyPosition = Opposite[declarer.Position];
         return gameState.Players.First(p => p.Position == dummyPosition);
@@ -197,5 +197,6 @@ public class GameService : IGameService
         gameState.PlayingState.Dummy = GetDummy(gameState, declarer);
         gameState.GamePhase = GamePhase.PLAYING;
     }
+
 }
 

@@ -2,6 +2,6 @@
 
 public class CardPlayAction
 {
-    public PlayerInfo Player { get; set; } = new();
+    public Player Player { get; set; } = new();
     public Card CardPlayed { get; set; } = new();
 }

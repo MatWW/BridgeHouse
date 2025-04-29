@@ -1,6 +1,7 @@
 ﻿using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
+using Shared.Enums;
 
 namespace Backend.Controllers;
 
@@ -42,9 +43,9 @@ public class BridgeTableController : ControllerBase
     }
 
     [HttpPatch("{bridgeTableId:long}/add-user/{userId}")]
-    public async Task<ActionResult<BridgeTable>> AddUserToBridgeTable(long bridgeTableId, string userId)
+    public async Task<ActionResult<BridgeTable>> AddUserToBridgeTable(long bridgeTableId, string userId, Position position)
     {
-        await bridgeTablesService.AddUserToBridgeTableAsync(bridgeTableId, userId);
+        await bridgeTablesService.AddUserToBridgeTableAsync(bridgeTableId, userId, position);
 
         return Ok();
     }

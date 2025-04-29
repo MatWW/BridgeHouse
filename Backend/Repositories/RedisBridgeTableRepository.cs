@@ -1,6 +1,7 @@
 ﻿using StackExchange.Redis;
 using Shared;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Backend.Repositories;
 
@@ -44,36 +45,46 @@ public class RedisBridgeTableRepository : IRedisBridgeTableRepository
         var id = hashEntries.FirstOrDefault(x => x.Name == "Id");
         var adminId = hashEntries.FirstOrDefault(x => x.Name == "AdminId");
         var numberOfDeals = hashEntries.FirstOrDefault(x => x.Name == "NumberOfDeals");
-        var playersIds = hashEntries.First(x => x.Name == "PlayersIds");
+        var players = hashEntries.First(x => x.Name == "Players");
 
-        if (id.Equals(default) || adminId.Equals(default) || numberOfDeals.Equals(default) || playersIds.Equals(default))
+        if (id.Equals(default) || adminId.Equals(default) || numberOfDeals.Equals(default) || players.Equals(default))
         {
             await redisDb.SetRemoveAsync("bridgeTable:ids", bridgeTableId);
             return null;
         }
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
 
         return new BridgeTable
         {
             Id = long.Parse(id.Value!),
             AdminId = adminId.Value!,
             NumberOfDeals = int.Parse(numberOfDeals.Value!),
-            PlayersIds = JsonSerializer.Deserialize<List<string>>(playersIds.Value!)!
+            Players = JsonSerializer.Deserialize<List<Player>>(players.Value!, options)!
         };
     }
 
-    public async Task<List<string>?> GetListOfBridgeTablePalyersIdsAsync(long bridgeTableId)
+    public async Task<List<Player>?> GetListOfBridgeTablePalyersAsync(long bridgeTableId)
     {
-        var redisPlayersIds = await redisDb.HashGetAsync($"bridgeTable:{bridgeTableId}", "playersIds");
+        var redisPlayers = await redisDb.HashGetAsync($"bridgeTable:{bridgeTableId}", "players");
 
-        if (redisPlayersIds.IsNull)
+        if (redisPlayers.IsNull)
         {
             return null;
         }
 
-        //if redisPlayersIds is empty JsonSerializer will return null
-        List<string>? playersIds = JsonSerializer.Deserialize<List<string>>(redisPlayersIds!);
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
 
-        return playersIds ?? [];
+        //if redisPlayersIds is empty JsonSerializer will return null
+        var players = JsonSerializer.Deserialize<List<Player>>(redisPlayers!, options);
+
+        return players ?? [];
     }
 
     public async Task<string?> GetTableAdminIdAsync(long bridgeTableId)
@@ -85,7 +96,12 @@ public class RedisBridgeTableRepository : IRedisBridgeTableRepository
             return null;
         }
 
-        string? adminId = JsonSerializer.Deserialize<string>(redisAdminId!);
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
+
+        string? adminId = JsonSerializer.Deserialize<string>(redisAdminId!, options);
 
         return adminId ?? string.Empty;
     }
@@ -94,29 +110,38 @@ public class RedisBridgeTableRepository : IRedisBridgeTableRepository
     { 
         table.Id ??= await redisDb.StringIncrementAsync("bridgeTable:id");
 
-        string key = $"table:{table.Id}";
-        string playersIdsAsJson = JsonSerializer.Serialize(table.PlayersIds);
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
+        
+        string playersAsJson = JsonSerializer.Serialize(table.Players, options);
 
         HashEntry[] hashEntry =
         [
             new ("adminId", table.AdminId),
-            new ("playersIds", playersIdsAsJson),
+            new ("players", playersAsJson),
             new ("numberOfDeals", table.NumberOfDeals),
         ];
-        await redisDb.HashSetAsync(key, hashEntry);
+        await redisDb.HashSetAsync($"table:{table.Id}", hashEntry);
 
         await redisDb.SetAddAsync("bridgeTable:ids", table.Id);
 
         return table;
     }
 
-    public async Task UpdateListOfBridgeTablePlayersIdsAsync(long tableId, List<string> playersIds)
+    public async Task UpdateListOfBridgeTablePlayersAsync(long tableId, List<Player> players)
     {
-        string updatedPlayersIdsJson = JsonSerializer.Serialize(playersIds);
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
+
+        string updatedPlayersJson = JsonSerializer.Serialize(players, options);
 
         await redisDb.HashSetAsync($"bridgeTable:{tableId}",
         [
-            new HashEntry($"bridgeTable:{tableId}", updatedPlayersIdsJson)
+            new HashEntry($"bridgeTable:{tableId}:players", updatedPlayersJson)
         ]);
     }
 
@@ -132,7 +157,7 @@ public class RedisBridgeTableRepository : IRedisBridgeTableRepository
         return deleted;
     }
 
-    public async Task<List<long>> GetListOfBridgeTablesIdsAsync()
+    private async Task<List<long>> GetListOfBridgeTablesIdsAsync()
     {
         var tablesIds = await redisDb.SetMembersAsync("bridgeTable:ids");
         return tablesIds.Select(tableId => (long)tableId).ToList();

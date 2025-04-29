@@ -1,5 +1,6 @@
 ﻿using Backend.Repositories;
 using Shared;
+using Shared.Enums;
 using Backend.Exceptions;
 
 namespace Backend.Services;
@@ -37,12 +38,20 @@ public class BridgeTablesService : IBridgeTablesService
     public async Task<BridgeTable> CreateBridgeTableAsync(int numberOfDeals)
     {
         string creatorId = userService.GetCurrentUserId();
+        var creator = new Player
+        {
+            PlayerId = creatorId,
+            // TODO get real username
+            UserName = "username",
+            Position = Position.N
+        };
+
 
         BridgeTable newBridgeTable = new BridgeTable
         {
             Id = null,
             AdminId = creatorId,
-            PlayersIds = new List<string> { creatorId },
+            Players = new List<Player> { creator },
             NumberOfDeals = numberOfDeals
         };
 
@@ -66,8 +75,7 @@ public class BridgeTablesService : IBridgeTablesService
         }
     }
 
-
-    public async Task AddUserToBridgeTableAsync(long bridgeTableId, string userId)
+    public async Task AddUserToBridgeTableAsync(long bridgeTableId, string userId, Position position)
     {
         bool requestSenderValid = await ValidateBridgeTableOwnershipAsync(bridgeTableId);
 
@@ -83,21 +91,29 @@ public class BridgeTablesService : IBridgeTablesService
             throw new UserDoesNotExistException($"User with id: {userId} does not exist");
         }
 
-        List<string>? playersIds = await redisBridgeTableRepository.GetListOfBridgeTablePalyersIdsAsync(bridgeTableId);
+        List<Player>? players = await redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
 
-        if (playersIds is null)
+        if (players is null)
         {
             throw new BridgeTableNotFoundException($"Bridge table with id: {bridgeTableId} was not found");
         }
 
-        if (playersIds.Contains(userId))
+        var player = new Player
+        {
+            PlayerId = userId,
+            // TODO get real username
+            UserName = "username",
+            Position = position
+        };
+
+        if (players.Contains(player))
         {
             throw new AddPlayerConflictException($"User with id: {userId} is already assigned to bridge table with id: {bridgeTableId}");
         }
 
-        playersIds.Add(userId);
+        players.Add(player);
 
-        await redisBridgeTableRepository.UpdateListOfBridgeTablePlayersIdsAsync(bridgeTableId, playersIds);
+        await redisBridgeTableRepository.UpdateListOfBridgeTablePlayersAsync(bridgeTableId, players);
     }
 
     public async Task RemoveUserFromBridgeTableAsync(long bridgeTableId, string userId)
@@ -116,21 +132,23 @@ public class BridgeTablesService : IBridgeTablesService
             throw new UserDoesNotExistException($"User with id: {userId} does not exist");
         }
 
-        List<string>? playersIds = await redisBridgeTableRepository.GetListOfBridgeTablePalyersIdsAsync(bridgeTableId);
+        List<Player>? players = await redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
 
-        if (playersIds is null)
+        if (players is null)
         {
             throw new BridgeTableNotFoundException($"Bridge table with id: {bridgeTableId} was not found");
         }
 
-        if (!playersIds.Contains(userId))
+        var player = players.FirstOrDefault(p => p.PlayerId == userId);
+
+        if (player is null)
         {
             throw new RemovePlayerConflictException($"User with id: {userId} is not assigned to bridge table with id: {bridgeTableId}");
         }
 
-        playersIds.Remove(userId);
+        players.Remove(player);
 
-        await redisBridgeTableRepository.UpdateListOfBridgeTablePlayersIdsAsync(bridgeTableId, playersIds);
+        await redisBridgeTableRepository.UpdateListOfBridgeTablePlayersAsync(bridgeTableId, players);
     }
 
     public async Task<bool> ValidateBridgeTableOwnershipAsync(long bridgeTableId)

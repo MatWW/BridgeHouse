@@ -2,6 +2,6 @@
 
 public class BidAction
 {
-    public PlayerInfo Player { get; set; } = new();
+    public Player Player { get; set; } = new();
     public Bid Bid { get; set; } = new();
 }
