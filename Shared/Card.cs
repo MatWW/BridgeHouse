@@ -1,4 +1,6 @@
-﻿namespace Shared;
+﻿using Shared.Enums;
+
+namespace Shared;
 
 public class Card
 {
