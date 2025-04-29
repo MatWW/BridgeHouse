@@ -8,4 +8,5 @@ public class BridgeTable
     public string AdminId {  get; set; }
     public List<string> PlayersIds { get; set; }
     public int NumberOfDeals { get; set; }
+
 }

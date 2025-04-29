@@ -1,11 +1,9 @@
 ﻿using Backend.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 
 namespace Backend.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/bridge-tables")]
 public class BridgeTableController : ControllerBase
@@ -43,7 +41,7 @@ public class BridgeTableController : ControllerBase
         return Created(url, createdTable);
     }
 
-    [HttpPatch("{bridgeTableId:long}/add-user/{userId:string}")]
+    [HttpPatch("{bridgeTableId:long}/add-user/{userId}")]
     public async Task<ActionResult<BridgeTable>> AddUserToBridgeTable(long bridgeTableId, string userId)
     {
         await bridgeTablesService.AddUserToBridgeTableAsync(bridgeTableId, userId);
@@ -51,7 +49,7 @@ public class BridgeTableController : ControllerBase
         return Ok();
     }
 
-    [HttpPatch("{bridgeTableId:long}/remove-user/{userId:string}")]
+    [HttpPatch("{bridgeTableId:long}/remove-user/{userId}")]
     public async Task<ActionResult<BridgeTable>> RemoveUserFromBridgeTable(long bridgeTableId, string userId)
     {
         await bridgeTablesService.RemoveUserFromBridgeTableAsync(bridgeTableId, userId);

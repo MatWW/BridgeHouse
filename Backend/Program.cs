@@ -18,13 +18,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddSignalR();
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "RedisBridge_";
-});
-builder.Services.AddScoped<IBiddingStateService, BiddingStateService>();
-
 builder.Services.AddAuthorization();
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
@@ -48,18 +41,18 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBridgeTablesService, BridgeTablesService>();
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect("localhost")
+    ConnectionMultiplexer.Connect("localhost:5002")
 );
 
 builder.Services.AddScoped<IRedisBridgeTableRepository, RedisBridgeTableRepository>();
 builder.Services.AddScoped<IUserRepository,  UserRepository>();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddProblemDetails();
+//builder.Services.AddProblemDetails();
 
 builder.Services.AddLogging();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -72,7 +65,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseExceptionHandler();
+//app.UseExceptionHandler();
 
 app.MapControllers();
 
