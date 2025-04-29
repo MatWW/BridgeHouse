@@ -46,6 +46,10 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 
 builder.Services.AddScoped<IRedisBridgeTableRepository, RedisBridgeTableRepository>();
 builder.Services.AddScoped<IUserRepository,  UserRepository>();
+builder.Services.AddScoped<IDeckService, DeckService>();
+builder.Services.AddScoped<IRedisGameStateRepository,  RedisGameStateRepository>();
+builder.Services.AddScoped<IGameService, GameService>();
+
 
 //builder.Services.AddProblemDetails();
 
@@ -53,6 +57,7 @@ builder.Services.AddLogging();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 
 var app = builder.Build();
 

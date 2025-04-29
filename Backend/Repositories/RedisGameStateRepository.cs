@@ -1,6 +1,7 @@
 ﻿using Shared;
 using StackExchange.Redis;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Backend.Repositories;
 
@@ -22,17 +23,28 @@ public class RedisGameStateRepository : IRedisGameStateRepository
             return null;
         }
 
-        GameState? gameState = JsonSerializer.Deserialize<GameState>(GameStateAsString);
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
+
+        GameState? gameState = JsonSerializer.Deserialize<GameState>(GameStateAsString, options);
 
         return gameState ?? null;
     }
 
-    public async Task SetGameStateAsync(GameState gameState)
+    public async Task SaveGameStateAsync(GameState gameState)
     {
-        string gameStateAsString = JsonSerializer.Serialize(gameState);
-        long gameId = gameState.Id;
+        gameState.Id ??= await redisDb.StringIncrementAsync("game:id");
 
-        await redisDb.StringSetAsync($"game:{gameId}", gameStateAsString);
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
+
+        string gameStateAsString = JsonSerializer.Serialize(gameState, options);
+
+        await redisDb.StringSetAsync($"game:{gameState.Id}", gameStateAsString);
     }
 
 }

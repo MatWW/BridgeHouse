@@ -6,5 +6,6 @@ public enum BiddingSuit
     DIAMOND,
     HEART,
     SPADE,
-    NO_TRUMP
+    NO_TRUMP,
+    NONE
 }
