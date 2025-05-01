@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using Backend.Repositories;
 using Backend.Models;
-using Backend.Exceptions;
 using Backend.ExceptionHandlers;
 
 

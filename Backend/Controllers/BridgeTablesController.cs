@@ -35,9 +35,9 @@ public class BridgeTableController : ControllerBase
     }
     
     [HttpPost]
-    public async Task<ActionResult<BridgeTable>> CreateBridgeTable([FromBody] int numberOfDeals)
+    public async Task<ActionResult<BridgeTable>> CreateBridgeTable([FromBody] CreateBridgeTableRequestDTO request)
     {
-        BridgeTable createdTable = await bridgeTablesService.CreateBridgeTableAsync(numberOfDeals);
+        BridgeTable createdTable = await bridgeTablesService.CreateBridgeTableAsync(request);
 
         var url = Url.Action("api/bridge-tables", new { bridgeTableId = createdTable.Id });
 

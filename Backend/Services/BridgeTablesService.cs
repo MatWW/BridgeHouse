@@ -35,7 +35,7 @@ public class BridgeTablesService : IBridgeTablesService
         return table;
     }
 
-    public async Task<BridgeTable> CreateBridgeTableAsync(int numberOfDeals)
+    public async Task<BridgeTable> CreateBridgeTableAsync(CreateBridgeTableRequestDTO request)
     {
         string creatorId = userService.GetCurrentUserId();
         var creator = new Player
@@ -52,7 +52,7 @@ public class BridgeTablesService : IBridgeTablesService
             Id = null,
             AdminId = creatorId,
             Players = new List<Player> { creator },
-            NumberOfDeals = numberOfDeals,
+            NumberOfDeals = request.NumberOfDeals,
             DealsIds = []
         };
 
