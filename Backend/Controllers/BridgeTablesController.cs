@@ -1,4 +1,5 @@
 ﻿using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 using Shared.Enums;
@@ -16,6 +17,7 @@ public class BridgeTableController : ControllerBase
         this.bridgeTablesService = bridgeTablesService;
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<List<BridgeTable>>> GetAllBridgeTables()
     {

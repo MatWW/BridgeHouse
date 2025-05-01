@@ -42,7 +42,7 @@ public class BridgeTablesService : IBridgeTablesService
         {
             PlayerId = creatorId,
             // TODO get real username
-            UserName = "username",
+            Nickname = "username",
             Position = Position.N
         };
 
@@ -102,7 +102,7 @@ public class BridgeTablesService : IBridgeTablesService
         {
             PlayerId = userId,
             // TODO get real username
-            UserName = "username",
+            Nickname = "username",
             Position = position
         };
 

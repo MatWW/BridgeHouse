@@ -22,7 +22,7 @@ namespace Backend.Controllers
 
             if (result.Succeeded)
             {
-                return CreatedAtAction(nameof(Register), new { userName = registrationModel.UserName }, null);
+                return CreatedAtAction(nameof(Register), new { emial = registrationModel.Email }, null);
             }
             else
             {
