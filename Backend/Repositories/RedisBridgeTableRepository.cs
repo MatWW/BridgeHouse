@@ -45,9 +45,10 @@ public class RedisBridgeTableRepository : IRedisBridgeTableRepository
         var id = hashEntries.FirstOrDefault(x => x.Name == "Id");
         var adminId = hashEntries.FirstOrDefault(x => x.Name == "AdminId");
         var numberOfDeals = hashEntries.FirstOrDefault(x => x.Name == "NumberOfDeals");
-        var players = hashEntries.First(x => x.Name == "Players");
+        var players = hashEntries.FirstOrDefault(x => x.Name == "Players");
+        var dealsIds = hashEntries.FirstOrDefault(x => x.Name == "DealsIds");
 
-        if (id.Equals(default) || adminId.Equals(default) || numberOfDeals.Equals(default) || players.Equals(default))
+        if (id.Equals(default) || adminId.Equals(default) || numberOfDeals.Equals(default) || players.Equals(default) || dealsIds.Equals(default))
         {
             await redisDb.SetRemoveAsync("bridgeTable:ids", bridgeTableId);
             return null;
@@ -63,7 +64,8 @@ public class RedisBridgeTableRepository : IRedisBridgeTableRepository
             Id = long.Parse(id.Value!),
             AdminId = adminId.Value!,
             NumberOfDeals = int.Parse(numberOfDeals.Value!),
-            Players = JsonSerializer.Deserialize<List<Player>>(players.Value!, options)!
+            Players = JsonSerializer.Deserialize<List<Player>>(players.Value!, options)!,
+            DealsIds = JsonSerializer.Deserialize<List<long>>(dealsIds.Value!)!,
         };
     }
 
@@ -116,12 +118,14 @@ public class RedisBridgeTableRepository : IRedisBridgeTableRepository
         };
         
         string playersAsJson = JsonSerializer.Serialize(table.Players, options);
+        string dealsIdsAsJson = JsonSerializer.Serialize(table.DealsIds);
 
         HashEntry[] hashEntry =
         [
             new ("adminId", table.AdminId),
             new ("players", playersAsJson),
             new ("numberOfDeals", table.NumberOfDeals),
+            new ("dealsIds", dealsIdsAsJson)
         ];
         await redisDb.HashSetAsync($"table:{table.Id}", hashEntry);
 

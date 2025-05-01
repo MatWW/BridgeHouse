@@ -52,7 +52,8 @@ public class BridgeTablesService : IBridgeTablesService
             Id = null,
             AdminId = creatorId,
             Players = new List<Player> { creator },
-            NumberOfDeals = numberOfDeals
+            NumberOfDeals = numberOfDeals,
+            DealsIds = []
         };
 
         return await redisBridgeTableRepository.SaveBridgeTableAsync(newBridgeTable);
