@@ -16,4 +16,14 @@ public class UserRepository : IUserRepository
     {
         return await appDbContext.Users.AnyAsync(u => u.Id == userId);
     }
+
+    public async Task<string?> GetUserNicknameById(string userId)
+    {
+        var nickname = await appDbContext.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.Nickname)
+            .FirstOrDefaultAsync();
+
+        return nickname;
+    }
 }
