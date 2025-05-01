@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using Backend.Repositories;
 using Backend.Models;
+using Backend.Exceptions;
+using Backend.ExceptionHandlers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,8 +53,14 @@ builder.Services.AddScoped<IDeckService, DeckService>();
 builder.Services.AddScoped<IRedisGameStateRepository,  RedisGameStateRepository>();
 builder.Services.AddScoped<IGameService, GameService>();
 
+builder.Services.AddProblemDetails();
 
-//builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<UserNotFoundExceptionHandler>();
+builder.Services.AddExceptionHandler<BridgeTableNotFoundExceptionHandler>();
+builder.Services.AddExceptionHandler<BridgeTableOwnershipExceptionHandler>();
+builder.Services.AddExceptionHandler<AddPlayerConflictExceptionHandler>();
+builder.Services.AddExceptionHandler<PlayerNotFoundAtBridgeTableExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddLogging();
 
@@ -71,7 +79,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-//app.UseExceptionHandler();
+app.UseExceptionHandler();
 
 app.MapControllers();
 

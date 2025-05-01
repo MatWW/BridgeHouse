@@ -89,7 +89,7 @@ public class BridgeTablesService : IBridgeTablesService
 
         if (!userExists)
         {
-            throw new UserDoesNotExistException($"User with id: {userId} does not exist");
+            throw new UserNotFoundException($"User with id: {userId} does not exist");
         }
 
         List<Player>? players = await redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
@@ -130,7 +130,7 @@ public class BridgeTablesService : IBridgeTablesService
 
         if (!userExists)
         {
-            throw new UserDoesNotExistException($"User with id: {userId} does not exist");
+            throw new UserNotFoundException($"User with id: {userId} does not exist");
         }
 
         List<Player>? players = await redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
@@ -144,7 +144,7 @@ public class BridgeTablesService : IBridgeTablesService
 
         if (player is null)
         {
-            throw new RemovePlayerConflictException($"User with id: {userId} is not assigned to bridge table with id: {bridgeTableId}");
+            throw new PlayerNotFoundAtBridgeTableException($"User with id: {userId} is not assigned to bridge table with id: {bridgeTableId}");
         }
 
         players.Remove(player);
