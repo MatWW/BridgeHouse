@@ -17,7 +17,7 @@ public class UserRepository : IUserRepository
         return await appDbContext.Users.AnyAsync(u => u.Id == userId);
     }
 
-    public async Task<string?> GetUserNicknameById(string userId)
+    public async Task<string?> GetUserNicknameByIdAsync(string userId)
     {
         var nickname = await appDbContext.Users
             .Where(u => u.Id == userId)
