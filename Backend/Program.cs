@@ -62,6 +62,7 @@ builder.Services.AddExceptionHandler<PlayerNotFoundAtBridgeTableExceptionHandler
 builder.Services.AddExceptionHandler<PlayersListNotValidExceptionHandler>();
 builder.Services.AddExceptionHandler<GameAlreadyStartedExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddSingleton<Random>();
 
 builder.Services.AddLogging();
 

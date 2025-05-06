@@ -5,8 +5,8 @@ namespace Backend.Services;
 
 public class DeckService : IDeckService
 {
-    private List<Card> deck;
-    private Random rnd;
+    private readonly List<Card> deck;
+    private readonly Random rnd;
 
     public DeckService()
     {
