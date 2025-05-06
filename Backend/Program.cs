@@ -59,6 +59,8 @@ builder.Services.AddExceptionHandler<BridgeTableNotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<BridgeTableOwnershipExceptionHandler>();
 builder.Services.AddExceptionHandler<AddPlayerConflictExceptionHandler>();
 builder.Services.AddExceptionHandler<PlayerNotFoundAtBridgeTableExceptionHandler>();
+builder.Services.AddExceptionHandler<PlayersListNotValidExceptionHandler>();
+builder.Services.AddExceptionHandler<GameAlreadyStartedExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddLogging();
