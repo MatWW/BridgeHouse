@@ -2,6 +2,7 @@
 using Shared;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Backend.Repositories;
 
@@ -159,6 +160,35 @@ public class RedisBridgeTableRepository : IRedisBridgeTableRepository
         }
 
         return deleted;
+    }
+
+    public async Task<bool> TableExistsAsync(long tableId)
+    {
+        return await redisDb.KeyExistsAsync($"bridgeTable:{tableId}");
+    }
+
+    public async Task<List<long>?> GetDealsIdsAsync(long tableId)
+    {
+        var redisDealsIds = await redisDb.HashGetAsync($"bridgeTable:{tableId}", "dealsIds");
+
+        if (redisDealsIds.IsNull)
+        {
+            return null;
+        }
+
+        var dealsIds = JsonSerializer.Deserialize<List<long>>(redisDealsIds!);
+
+        return dealsIds ?? [];
+    }
+
+    public async Task UpdateListOfDealsIdsAsync(long tableId, List<long> dealsIds)
+    {
+        string dealsIdsAsJson = JsonSerializer.Serialize(dealsIds);
+
+        await redisDb.HashSetAsync($"bridgeTable:{tableId}",
+        [
+            new HashEntry($"bridgeTable:{tableId}:dealsIds", dealsIdsAsJson)
+        ]);
     }
 
     private async Task<List<long>> GetListOfBridgeTablesIdsAsync()

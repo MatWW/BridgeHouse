@@ -11,4 +11,7 @@ public interface IRedisBridgeTableRepository
     Task<BridgeTable> SaveBridgeTableAsync(BridgeTable table);
     Task UpdateListOfBridgeTablePlayersAsync(long bridgeTableId, List<Player> players);
     Task<bool> DeleteBridgeTableAsync(long bridgeTableId);
+    Task<bool> TableExistsAsync(long tableId);
+    Task UpdateListOfDealsIdsAsync(long tableId, List<long> dealsIds);
+    Task<List<long>?> GetDealsIdsAsync(long tableId);
 }
