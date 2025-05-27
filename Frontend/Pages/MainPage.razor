@@ -1,0 +1,79 @@
+﻿@page "/"
+
+@using Shared
+@using Shared.Enums
+@using Microsoft.AspNetCore.SignalR.Client;
+
+@inject HttpClient Http
+
+@implements IAsyncDisposable
+
+@if (gamePhase==GamePhase.BIDDING)
+{
+	<BiddingScreen />
+}
+else if (gamePhase==GamePhase.PLAYING)
+{
+	<PlayingScreen />
+}
+else 
+{
+	<h1>Player not in game</h1>
+}
+
+@code {
+	GamePhase? gamePhase;
+	private HubConnection? hubConnection;
+
+	protected override async Task OnInitializedAsync()
+	{
+		//long? gameId = await Http.GetFromJsonAsync<long?>("me");
+
+		var gameState = await Http.GetFromJsonAsync<GameState>($"api/game/1/gameState");
+
+		if (gameState is null)
+		{
+			throw new Exception("gameState is null");
+		}
+
+		gamePhase = gameState.GamePhase;
+
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl("https://localhost:7200/gameHub")
+			.WithAutomaticReconnect()
+			.Build();
+
+		hubConnection.On("ReceiveGamePhaseUpdate", Update);
+
+		await hubConnection.StartAsync();
+	}
+
+	private async Task Update()
+	{
+		var gameState = await Http.GetFromJsonAsync<GameState>($"api/game/1/gameState");
+
+		if (gameState is null)
+		{
+			throw new Exception("gameState is null");
+		}
+
+		gamePhase = gameState.GamePhase;
+
+		
+
+		await InvokeAsync(StateHasChanged);
+
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (hubConnection is not null)
+		{
+			hubConnection.Remove("ReceiveGamePhaseUpdate");
+
+			await hubConnection.StopAsync();
+			await hubConnection.DisposeAsync();
+		}
+	}
+}
+
