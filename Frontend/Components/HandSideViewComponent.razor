@@ -1,0 +1,50 @@
+﻿@using Shared
+@using Shared.Enums
+
+<div class="hand">
+	<div class="cards @Side">
+		@foreach (var card in ClubCards)
+		{
+			<CardComponent Card="card"/>
+		}
+	</div>
+	<div class="cards @Side">
+		@foreach (var card in DiamondCards)
+		{
+			<CardComponent Card="card"/>
+		}
+	</div>
+	<div class="cards @Side">
+		@foreach (var card in HeartCards)
+		{
+			<CardComponent Card="card"/>
+		}
+	</div>
+	<div class="cards @Side">
+		@foreach (var card in SpadeCards)
+		{
+			<CardComponent Card="card" />
+		}
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public List<Card> Cards { get; set; } = new();
+
+	[Parameter]
+	public string Side { get; set; } = string.Empty;
+
+	public List<Card> ClubCards = [];
+	public List<Card> DiamondCards = [];
+	public List<Card> HeartCards = [];
+	public List<Card> SpadeCards = [];
+
+	protected override void OnInitialized()
+	{
+		ClubCards = Cards.Where(c => c.Suit == CardSuit.CLUB).ToList();
+		DiamondCards = Cards.Where(c => c.Suit == CardSuit.DIAMOND).ToList();
+		HeartCards = Cards.Where(c => c.Suit == CardSuit.HEART).ToList();
+		SpadeCards = Cards.Where(c => c.Suit == CardSuit.SPADE).ToList();
+	}
+}

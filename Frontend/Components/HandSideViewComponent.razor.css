@@ -1,0 +1,21 @@
+﻿.hand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 35vw;
+}
+
+.cards {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+
+.left {
+    justify-content: flex-start;
+}
+
+.right {
+    justify-content: flex-end;
+}
