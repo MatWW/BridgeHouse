@@ -1,0 +1,15 @@
+﻿@page "/logout"
+
+@inject HttpClient Http
+
+<h3>logout</h3>
+
+<button @onclick="HandleLogout">Logout</button>
+
+@code {
+	private async Task HandleLogout()
+	{
+		var request = new HttpRequestMessage(HttpMethod.Post, "/api/authentication/logout");
+		var response = await Http.SendAsync(request);
+	}
+}
