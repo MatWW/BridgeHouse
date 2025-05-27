@@ -28,15 +28,26 @@ builder.Services.AddIdentity<AppUser, IdentityRole>()
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = false;
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
+});
+
+
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy
+            .WithOrigins("https://localhost:7087")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
+
 
 builder.Services.AddScoped<IUserService, UserService>();
 
@@ -51,6 +62,8 @@ builder.Services.AddScoped<IUserRepository,  UserRepository>();
 builder.Services.AddScoped<IDeckService, DeckService>();
 builder.Services.AddScoped<IRedisGameStateRepository,  RedisGameStateRepository>();
 builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<IBiddingService, BiddingService>();
+builder.Services.AddScoped<IPlayingService, PlayingService>();
 
 builder.Services.AddProblemDetails();
 
@@ -61,6 +74,7 @@ builder.Services.AddExceptionHandler<AddPlayerConflictExceptionHandler>();
 builder.Services.AddExceptionHandler<PlayerNotFoundAtBridgeTableExceptionHandler>();
 builder.Services.AddExceptionHandler<PlayersListNotValidExceptionHandler>();
 builder.Services.AddExceptionHandler<GameAlreadyStartedExceptionHandler>();
+builder.Services.AddExceptionHandler<GameNotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddSingleton<Random>();
 
@@ -83,14 +97,16 @@ app.UseHttpsRedirection();
 
 app.UseExceptionHandler();
 
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
-app.UseAuthorization();
-app.UseAuthentication();
+
 
 app.MapHub<BridgeHub>("/gameHub");
 
-app.UseCors();
+
 
 app.Use(async (context, next) =>
 {

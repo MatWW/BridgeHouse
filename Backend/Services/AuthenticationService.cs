@@ -36,7 +36,7 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<SignInResult> LoginUserAsync(LoginModel loginModel)
     {
-        var result = await signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, isPersistent: false, lockoutOnFailure: false);
+        var result = await signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, isPersistent: true, lockoutOnFailure: false);
 
         return result;
     }
