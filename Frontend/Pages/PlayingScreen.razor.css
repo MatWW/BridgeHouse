@@ -1,0 +1,109 @@
+﻿.playing {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: floralwhite;
+}
+
+.playing-screen {
+    height: 945px;
+    width: 1920px;
+    background-color: white;
+    position: relative;
+
+    transform: scale(1);
+    transform-origin: center;
+    transition: transform 0.3s ease-out;
+    flex-shrink: 0;
+
+}
+
+.cards-on-table {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    height: 400px;
+    width: 400px;
+    position: relative;
+}
+
+.card {
+    position: absolute;
+}
+
+.top {
+    left: 150px;
+}
+
+.left {
+    top: 130px;
+}
+
+.right {
+    left: 300px;
+    top: 130px;
+}
+
+.bottom {
+    bottom: 0px;
+    left: 150px;
+}
+
+.hand {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.left-player-cards {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+
+.right-player-cards {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+}
+
+.top-player-cards {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.game-info-box {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+@media (max-width: 1900px) {
+    .playing-screen {
+        transform: scale(var(--widthScale2));
+    }
+}
+
+@media (max-height: 945px) {
+    .playing-screen {
+        transform: scale(var(--heightScale2));
+    }
+}
+
+@media (max-width: 1900px) and (max-height: 945px) {
+    .playing-screen {
+        transform: scale(min(var(--widthScale2), var(--heightScale2)));
+    }
+}

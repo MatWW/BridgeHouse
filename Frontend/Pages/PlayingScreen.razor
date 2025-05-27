@@ -1,0 +1,290 @@
+﻿@page "/playing-screen"
+
+@using Frontend.Components
+@using Shared
+@using Shared.Enums
+@using Microsoft.AspNetCore.SignalR.Client
+
+@implements IAsyncDisposable
+
+@inject HttpClient HttpClient
+
+<div class="playing">
+	<div class="playing-screen">
+		<div class="cards-on-table">
+			<div class="card bottom">
+				@if (cardsToDisplay[0] is not null)
+				{
+					<CardComponent Card="@cardsToDisplay[0]" />
+				}
+			</div>
+			<div class="card left">
+				@if (cardsToDisplay[1] is not null)
+				{
+					<CardComponent Card="@cardsToDisplay[1]" />
+				}	
+			</div>
+			<div class="card top">
+				@if (cardsToDisplay[2] is not null)
+				{
+					<CardComponent Card="@cardsToDisplay[2]" />
+				}
+			</div>
+			<div class="card right">
+				@if (cardsToDisplay[3] is not null)
+				{
+					<CardComponent Card="@cardsToDisplay[3]" />
+				}
+			</div>
+		</div>
+		<div class="hand">
+			<HandComponent Cards="@playerCards" OnCardClicked="HandleCardClick"/>
+		</div>
+		<div class="left-player-cards">
+			@if (GetIndexForPosition(dummy.Position, signedInPlayer.Position) == 1 && canShowDummy)
+			{
+				<HandSideViewComponent Cards="@dummiesCards" Side = "left"/>
+			}
+			else
+			{
+				<HiddenCardsComponent />
+			}
+		</div>
+		<div class="top-player-cards">
+			@if (GetIndexForPosition(dummy.Position, signedInPlayer.Position) == 2 && canShowDummy)
+			{
+				<HandComponent Cards="@dummiesCards" OnCardClicked="HandleCardClick"/>
+			}
+			else
+			{
+				<HiddenCardsComponent />
+			}
+		</div>
+		<div class="right-player-cards">
+			@if (GetIndexForPosition(dummy.Position, signedInPlayer.Position) == 3 && canShowDummy)
+			{
+				<HandSideViewComponent Cards="@dummiesCards" Side="right"/>
+			}
+			else
+			{
+				<HiddenCardsComponent />
+			}
+		</div>
+		<div class="game-info-box">
+			<GameInfoBoxComponent NSTricks="@playingState.NSTricks"
+			EWTricks="@playingState.EWTricks"
+			Contract="@contract">
+			</GameInfoBoxComponent>
+		</div>
+	</div>
+</div>
+
+@code {
+	private List<Card?> cardsToDisplay = [];
+	private Player signedInPlayer = new();
+	private List<Card> playerCards = [];
+	private PlayingState playingState = new();
+	private Player currentTurnPlayer = new();
+	private Contract contract = new();
+
+	private Player dummy = new();
+	private List<Card> dummiesCards = [];
+	private bool canShowDummy = false;
+
+	private HubConnection? hubConnection;
+
+	protected override async Task OnInitializedAsync()
+	{
+		PlayingState? playingState = await HttpClient.GetFromJsonAsync<PlayingState>($"api/game/1/playingState");
+
+		if (playingState is null)
+		{
+			throw new Exception("PlayingState cannot be loaded successfully");
+		}
+		else
+		{
+			this.playingState = playingState;
+		}
+
+		Player? signedInPlayer = await HttpClient.GetFromJsonAsync<Player>($"api/game/1/playerInfo/me");
+
+		if (signedInPlayer is null)
+		{
+			throw new Exception("SignedInPlayer cannot be loaded successfully");
+		}
+		else
+		{
+			this.signedInPlayer = signedInPlayer;
+		}
+
+		Player? currentTurnPlayer = await HttpClient.GetFromJsonAsync<Player>($"api/game/1/playerInfo/current");
+
+		if (currentTurnPlayer is null)
+		{
+			throw new Exception("CurrentTurnPlayer cannot be loaded successfully");
+		}
+		else
+		{
+			this.currentTurnPlayer = currentTurnPlayer;
+		}
+
+		List<Card>? playerCards = await HttpClient.GetFromJsonAsync<List<Card>>($"api/game/1/cards/{signedInPlayer.PlayerId}");
+
+		if (playerCards is null)
+		{
+			throw new Exception("PlayerCards cannot be loaded successfully");
+		}
+		else
+		{
+			this.playerCards = playerCards;
+		}
+
+		cardsToDisplay = GetCardsToDisplay(this.playingState.CardsOnTable);
+
+		if (this.playingState.CardPlayActions.Count >= 1)
+		{
+			canShowDummy = true;
+			dummy = this.playingState.Dummy;
+			List<Card>? dummiesCards = await HttpClient.GetFromJsonAsync<List<Card>>($"api/game/1/cards/dummy");
+
+			if (dummiesCards is null)
+			{
+				throw new Exception("DummiesCards cannot be loaded sucessfully");
+			}
+
+			this.dummiesCards = dummiesCards;
+		}
+
+		Contract? contract = await HttpClient.GetFromJsonAsync<Contract>($"api/game/1/contract");
+
+		if (contract is null)
+		{
+			throw new Exception("Contract cannot be loaded sucessfully");
+		}
+		else
+		{
+			this.contract = contract;
+		}
+
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl("https://localhost:7200/gameHub")
+			.WithAutomaticReconnect()
+			.Build();
+
+		hubConnection.On("ReceiveCardPlayUpdate", Update);
+
+		await hubConnection.StartAsync();
+	}
+
+	private async Task Update()
+	{
+		PlayingState? playingState = await HttpClient.GetFromJsonAsync<PlayingState>($"api/game/1/playingState");
+
+		if (playingState is null)
+		{
+			throw new Exception("PlayingState cannot be loaded successfully");
+		}
+		else
+		{
+			this.playingState = playingState;
+		}
+
+		Player? currentTurnPlayer = await HttpClient.GetFromJsonAsync<Player>($"api/game/1/playerInfo/current");
+
+		if (currentTurnPlayer is null)
+		{
+			throw new Exception("CurrentTurnPlayer cannot be loaded successfully");
+		}
+		else
+		{
+			this.currentTurnPlayer = currentTurnPlayer;
+		}
+
+		List<Card>? playerCards = await HttpClient.GetFromJsonAsync<List<Card>>($"api/game/1/cards/{signedInPlayer.PlayerId}");
+
+		if (playerCards is null)
+		{
+			throw new Exception("PlayerCards cannot be loaded successfully");
+		}
+		else
+		{
+			this.playerCards = playerCards;
+		}
+
+		cardsToDisplay = GetCardsToDisplay(this.playingState.CardsOnTable);
+
+		if (this.playingState.CardPlayActions.Count >= 1)
+		{
+			canShowDummy = true;
+			dummy = this.playingState.Dummy;
+			List<Card>? dummiesCards = await HttpClient.GetFromJsonAsync<List<Card>>($"api/game/1/cards/dummy");
+
+			if (dummiesCards is null)
+			{
+				throw new Exception("DummiesCards cannot be loaded");
+			}
+
+			this.dummiesCards = dummiesCards;
+		}
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task HandleCardClick(Card clickedCard)
+	{
+		var cardPlayAction = new CardPlayAction
+			{
+				CardPlayed = clickedCard,
+				Player = currentTurnPlayer
+			};
+
+		await HttpClient.PostAsJsonAsync($"api/game/1/playCard", cardPlayAction);
+
+		if (hubConnection is null)
+		{
+			throw new Exception("HubConnection is null");
+		}
+
+		await hubConnection.InvokeAsync("SendCardPlayUpdate");
+	}
+
+	private List<Card?> GetCardsToDisplay(List<CardPlayAction> cardsOnTable)
+	{
+		var playerPosition = signedInPlayer.Position;
+
+		cardsToDisplay = new List<Card?> { null, null, null, null };
+
+		foreach(var cardPlayAction in cardsOnTable)
+		{
+			var cardPosition = cardPlayAction.Player.Position;
+
+			cardsToDisplay[GetIndexForPosition(cardPosition, playerPosition)] = cardPlayAction.CardPlayed;
+		}
+
+		return cardsToDisplay;
+	}
+
+	private int GetIndexForPosition(Position position, Position playerPosition)
+	{
+		Position[] clockwise = new[] { Position.W, Position.N, Position.E, Position.S };
+
+		int playerIndex = Array.IndexOf(clockwise, playerPosition); 
+		int targetIndex = Array.IndexOf(clockwise, position); 
+
+		int index = (targetIndex - playerIndex + 4) % 4;
+
+		return index;
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (hubConnection is not null)
+		{
+			hubConnection.Remove("ReceiveCardPlayUpdate");
+
+			await hubConnection.StopAsync();
+			await hubConnection.DisposeAsync();
+		}
+	}
+
+}
