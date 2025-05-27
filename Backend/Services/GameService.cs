@@ -24,11 +24,11 @@ public class GameService : IGameService
         this.userService = userService;
     }
 
-    public async Task StartGame(long tableId, List<Player> players)
+    public async Task StartGameAsync(long tableId, List<Player> players)
     {
-        await ValidateTableOwnershipAsync(tableId);
-        await ValidateTableAsync(tableId);
-        await ValidatePlayersAsync(tableId, players);
+        //await ValidateTableOwnershipAsync(tableId);
+        //await ValidateTableAsync(tableId);
+        //await ValidatePlayersAsync(tableId, players);
 
         List<string> playersIds = players.Select(p => p.PlayerId).ToList();
 
@@ -44,7 +44,130 @@ public class GameService : IGameService
             PlayingState = new PlayingState()
         };
 
-        await redisGameStateRepository.SaveGameStateAsync(gameState);
+        long gameId = await redisGameStateRepository.SaveGameStateAsync(gameState);
+
+        await AddInformationAboutPlayersBeingInGameAsync(players, gameId);
+    }
+
+    public async Task<GameState> GetGameStateAsync(long gameId)
+    {
+        var gameState = await redisGameStateRepository.GetGameStateAsync(gameId);
+
+        if (gameState is null)
+        {
+            throw new GameNotFoundException($"Game with id: {gameId} was not found");
+        }
+
+        return gameState;
+    }
+
+    public async Task<BiddingState> GetBiddingStateAsync(long gameId)
+    {
+        var gameState = await GetGameStateAsync(gameId);
+
+        return gameState.BiddingState;
+    }
+    
+    public async Task<PlayingState> GetPlayingStateAsync(long gameId)
+    {
+        var gameState = await GetGameStateAsync(gameId);
+
+        return gameState.PlayingState;
+    }
+
+    public async Task<Contract> GetContractAsync(long gameId)
+    {
+        var gameState = await GetGameStateAsync(gameId);
+
+        return gameState.BiddingState.Contract;
+    }
+
+    public async Task<Player> GetSignedInPlayerInfoAsync(long gameId)
+    {
+        string userId = userService.GetCurrentUserId();
+
+        var playerInfo = await GetInfoAboutPlayerInGameAsync(userId, gameId);
+
+        if (playerInfo is null)
+        {
+            // TODO implement specific exception
+            throw new Exception();
+        }
+
+        return playerInfo;
+    }
+
+    private async Task<Player?> GetInfoAboutPlayerInGameAsync(string playerId,  long gameId)
+    {
+        var gameState = await redisGameStateRepository.GetGameStateAsync(gameId);
+
+        if (gameState is null)
+        {
+            throw new GameNotFoundException($"Game with id: {gameId} was not found");
+        }
+
+        return gameState.Players.FirstOrDefault(p => p.PlayerId == playerId);
+    }
+
+    public async Task<List<Card>> GetPlayerCardsAsync(long gameId, string playerId)
+    {
+        var gameState = await GetGameStateAsync(gameId);
+
+        string requestSenderId = userService.GetCurrentUserId();
+
+        if (playerId != requestSenderId)
+        {
+            throw new Exception();
+            //TODO implement custom exception
+        }
+
+        return gameState.PlayerHands[playerId];
+    }
+
+    public async Task<List<Card>> GetDummiesCardsAsync(long gameId)
+    {
+        var gameState = await GetGameStateAsync(gameId);
+
+        if (gameState.PlayingState.CardPlayActions.Count < 1)
+        {
+            throw new Exception();
+            //TODO implement custom exception
+        }
+
+        var dummyId = gameState.PlayingState.Dummy.PlayerId;
+
+        return gameState.PlayerHands[dummyId];
+    }
+
+    public async Task<Player> GetPlayerInfoAsync(long gameId, string playerId)
+    {
+        var playerInfo = await GetInfoAboutPlayerInGameAsync(playerId, gameId);
+
+        if (playerInfo is null)
+        {
+            // TODO implement specific exception
+            throw new Exception();
+        }
+
+        return playerInfo;
+    }
+
+    public async Task<Player> GetCurrentPlayerInfoAsync(long gameId)
+    {
+        var gameState = await GetGameStateAsync(gameId);
+
+        var currentPlayerId = gameState.CurrentPlayerId;
+
+        var playerInfo = await GetInfoAboutPlayerInGameAsync(currentPlayerId, gameId);
+
+
+        if (playerInfo is null)
+        {
+            // TODO implement specific exception
+            throw new Exception();
+        }
+
+        return playerInfo;
     }
 
     private async Task ValidateTableOwnershipAsync(long tableId)
@@ -67,7 +190,7 @@ public class GameService : IGameService
             throw new BridgeTableNotFoundException($"Table with id: {tableId} was not found");
         }
 
-        var dealsIds = await redisBridgeTableRepository.GetDealsIds(tableId);
+        var dealsIds = await redisBridgeTableRepository.GetDealsIdsAsync(tableId);
 
         if (dealsIds is null || dealsIds.Count != 0)
         {
@@ -83,6 +206,21 @@ public class GameService : IGameService
         {
             throw new PlayersListNotValidException($"Player list is not valid");
         }
+    }
+
+    private async Task AddInformationAboutPlayersBeingInGameAsync(List<Player> players, long gameId)
+    {
+        foreach (var player in players) 
+        {
+            await redisGameStateRepository.SaveInformationAboutPlayerBeingInGameAsync(player.PlayerId, gameId);
+        }
+    }
+
+    public async Task<long?> GetSignedInPlayerGameIdAsync()
+    {
+        string userId = userService.GetCurrentUserId();
+
+        return await redisGameStateRepository.GetGameIdOfPlayerAsync(userId);
     }
 }
 
