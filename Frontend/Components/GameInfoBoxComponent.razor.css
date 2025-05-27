@@ -1,0 +1,50 @@
+﻿.game-info-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    height: 150px;
+    width: 200px;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.club {
+    color: darkgreen;
+}
+
+.diamond {
+    color: darkorange;
+}
+
+.heart {
+    color: red;
+}
+
+.spade {
+    color: black;
+}
+
+.no-trump {
+    color: lightslategray;
+}
+
+.tricks {
+    margin-top: 30px;
+}
+
+.ns {
+    color: dodgerblue;
+}
+
+.ew {
+    color: crimson;
+}
+
+.contract-word {
+    color: darkslategray;
+}
