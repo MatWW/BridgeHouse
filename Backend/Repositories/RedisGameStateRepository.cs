@@ -33,7 +33,7 @@ public class RedisGameStateRepository : IRedisGameStateRepository
         return gameState ?? null;
     }
 
-    public async Task SaveGameStateAsync(GameState gameState)
+    public async Task<long> SaveGameStateAsync(GameState gameState)
     {
         gameState.Id ??= await redisDb.StringIncrementAsync("game:id");
 
@@ -45,6 +45,27 @@ public class RedisGameStateRepository : IRedisGameStateRepository
         string gameStateAsString = JsonSerializer.Serialize(gameState, options);
 
         await redisDb.StringSetAsync($"game:{gameState.Id}", gameStateAsString);
+
+        long id = (long)gameState.Id;
+
+        return id;
     }
 
+    public async Task SaveInformationAboutPlayerBeingInGameAsync(string playerId, long gameId)
+    {
+        await redisDb.StringSetAsync($"player:{playerId}:game", gameId);
+    }
+
+    public async Task<long?> GetGameIdOfPlayerAsync(string playerId)
+    {
+        var gameIdAsString = await redisDb.StringGetAsync($"player:{playerId}:game");
+
+        if (!gameIdAsString.HasValue)
+            return null; 
+
+        if (long.TryParse(gameIdAsString, out long gameId))
+            return gameId; 
+
+        return null; 
+    }
 }
