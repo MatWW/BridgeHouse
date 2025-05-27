@@ -16,7 +16,7 @@ public class BiddingService : IBiddingService
         this.userService = userService;
     }
 
-    public async Task PlaceBid(long gameId, BidAction bidAction)
+    public async Task PlaceBidAsync(long gameId, BidAction bidAction)
     {
         var gameState = await LoadAndValidateGameState(gameId);
 
@@ -66,7 +66,7 @@ public class BiddingService : IBiddingService
     private static void ValidatePlayerPermissions(GameState gameState, BidAction bidAction, string senderId)
     {
         if (gameState.CurrentPlayerId != senderId)
-            throw new UnauthorizedGameActionException($"Only current player may place a bid");
+            throw new UnauthorizedGameActionException($"Only current player can place a bid");
 
         if (bidAction.Player.PlayerId != senderId)
             throw new UnauthorizedGameActionException($"Player mismatch in bid action");
@@ -98,7 +98,7 @@ public class BiddingService : IBiddingService
         if (bid.Value == BiddingValue.REDOUBLE)
         {
             return currentContract.IsDoubled && !currentContract.IsRedoubled
-                && IsCurrentContractBiddedByOpponent(bid, bidder, currentContract);
+                && !IsCurrentContractBiddedByOpponent(bid, bidder, currentContract);
         }
 
         return false;
@@ -119,7 +119,8 @@ public class BiddingService : IBiddingService
         return (a == Position.N && b == Position.S) ||
             (a == Position.S && b == Position.N) ||
             (a == Position.E && b == Position.W) ||
-            (a == Position.W && b == Position.E);
+            (a == Position.W && b == Position.E) ||
+            (a == b);
     }
 
     private static void UpdateBiddingState(GameState gameState, BidAction bidAction)
@@ -147,7 +148,9 @@ public class BiddingService : IBiddingService
 
     private static bool IsBiddingOver(GameState gameState)
     {
-        return gameState.BiddingState.BidActions
+        var bidActions = gameState.BiddingState.BidActions;
+
+        return bidActions.Count > 3 && bidActions
             .TakeLast(3)
             .All(b => b.Bid.Value == BiddingValue.PASS);
     }
@@ -185,6 +188,8 @@ public class BiddingService : IBiddingService
         var finalContract = gameState.BiddingState.Contract;
         if (finalContract is null)
         {
+            // game is finished - four passes
+            gameState.GamePhase = GamePhase.PLAYING;
             return;
         }
 
@@ -192,7 +197,7 @@ public class BiddingService : IBiddingService
         var declarer = gameState.BiddingState.BidActions
             .First(b => b.Bid.Suit == suit).Player;
 
-        gameState.CurrentPlayerId = declarer.PlayerId;
+        gameState.CurrentPlayerId = GetNextPlayerId(gameState, declarer);
         gameState.PlayingState.Declarer = declarer;
         gameState.PlayingState.Dummy = GetDummy(gameState, declarer);
         gameState.GamePhase = GamePhase.PLAYING;
