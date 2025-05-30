@@ -7,65 +7,40 @@ namespace Backend.Repositories;
 
 public class RedisGameStateRepository : IRedisGameStateRepository
 {
-    private readonly IDatabase redisDb;
+    private readonly IDatabase _redisDb;
+    private readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    private static string GameKey(long gameId) => $"game:{gameId}";
 
     public RedisGameStateRepository(IConnectionMultiplexer redis)
     {
-        redisDb = redis.GetDatabase();
+        _redisDb = redis.GetDatabase();
     }
 
     public async Task<GameState?> GetGameStateAsync(long gameId)
     {
-        string? GameStateAsString = await redisDb.StringGetAsync($"game:{gameId}");
+        var gameStateAsString = await _redisDb.StringGetAsync(GameKey(gameId));
 
-        if (GameStateAsString is null)
-        {
+        if (!gameStateAsString.HasValue)
             return null;
-        }
 
-        var options = new JsonSerializerOptions
-        {
-            Converters = { new JsonStringEnumConverter() }
-        };
-
-        GameState? gameState = JsonSerializer.Deserialize<GameState>(GameStateAsString, options);
-
-        return gameState ?? null;
+        return JsonSerializer.Deserialize<GameState>(gameStateAsString, _jsonOptions);
     }
 
     public async Task<long> SaveGameStateAsync(GameState gameState)
     {
-        gameState.Id ??= await redisDb.StringIncrementAsync("game:id");
+        gameState.Id ??= await _redisDb.StringIncrementAsync("game:id");
 
-        var options = new JsonSerializerOptions
-        {
-            Converters = { new JsonStringEnumConverter() }
-        };
+        var serialized = JsonSerializer.Serialize(gameState, _jsonOptions);
 
-        string gameStateAsString = JsonSerializer.Serialize(gameState, options);
+        await _redisDb.StringSetAsync(GameKey(gameState.Id.Value), serialized);
 
-        await redisDb.StringSetAsync($"game:{gameState.Id}", gameStateAsString);
-
-        long id = (long)gameState.Id;
-
-        return id;
+        return (long)gameState.Id;
     }
 
-    public async Task SaveInformationAboutPlayerBeingInGameAsync(string playerId, long gameId)
-    {
-        await redisDb.StringSetAsync($"player:{playerId}:game", gameId);
-    }
-
-    public async Task<long?> GetGameIdOfPlayerAsync(string playerId)
-    {
-        var gameIdAsString = await redisDb.StringGetAsync($"player:{playerId}:game");
-
-        if (!gameIdAsString.HasValue)
-            return null; 
-
-        if (long.TryParse(gameIdAsString, out long gameId))
-            return gameId; 
-
-        return null; 
-    }
+    public Task DeleteGameStateAsync(long gameId) =>
+        _redisDb.KeyDeleteAsync(GameKey(gameId));
 }
