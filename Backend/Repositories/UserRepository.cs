@@ -12,18 +12,23 @@ public class UserRepository : IUserRepository
         this.appDbContext = appDbContext;
     }
 
-    public async Task<bool> UserExistsAsync(string userId)
-    {
-        return await appDbContext.Users.AnyAsync(u => u.Id == userId);
-    }
+    public Task<bool> UserExistsAsync(string userId) =>
+        appDbContext.Users.AnyAsync(u => u.Id == userId);
 
-    public async Task<string?> GetUserNicknameByIdAsync(string userId)
-    {
-        var nickname = await appDbContext.Users
+    public Task<string?> GetUserNicknameByIdAsync(string userId) =>
+        appDbContext.Users
+            .AsNoTracking()
             .Where(u => u.Id == userId)
             .Select(u => u.Nickname)
             .FirstOrDefaultAsync();
 
-        return nickname;
-    }
+        
+
+    public Task<string?> GetUserIdByNicknameAsync(string nickname) =>
+        appDbContext.Users
+            .AsNoTracking()
+            .Where(u => u.Nickname == nickname)
+            .Select(u => u.Id)
+            .FirstOrDefaultAsync();
+
 }
