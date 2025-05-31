@@ -6,13 +6,13 @@ namespace Backend.Services;
 
 public class AuthenticationService : IAuthenticationService
 {
-    private readonly UserManager<AppUser> userManager;
-    private readonly SignInManager<AppUser> signInManager;
+    private readonly UserManager<AppUser> _userManager;
+    private readonly SignInManager<AppUser> _signInManager;
 
     public AuthenticationService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
     {
-        this.userManager = userManager;
-        this.signInManager = signInManager;
+        _userManager = userManager;
+        _signInManager = signInManager;
     }
 
     public async Task<IdentityResult> RegisterUserAsync(RegistrationModel registrationModel)
@@ -24,11 +24,11 @@ public class AuthenticationService : IAuthenticationService
             Nickname = registrationModel.Nickname
         };
 
-        var result = await userManager.CreateAsync(user, registrationModel.Password);
+        var result = await _userManager.CreateAsync(user, registrationModel.Password);
 
         if (result.Succeeded)
         {
-            await signInManager.SignInAsync(user, isPersistent: false);
+            await _signInManager.SignInAsync(user, isPersistent: true);
         }
 
         return result;
@@ -36,13 +36,13 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<SignInResult> LoginUserAsync(LoginModel loginModel)
     {
-        var result = await signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, isPersistent: true, lockoutOnFailure: false);
+        var result = await _signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, isPersistent: true, lockoutOnFailure: false);
 
         return result;
     }
 
     public async Task LogoutUserAsync()
     {
-        await signInManager.SignOutAsync();
+        await _signInManager.SignOutAsync();
     }
 }

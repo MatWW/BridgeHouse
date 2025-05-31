@@ -1,4 +1,5 @@
 ﻿using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 
@@ -8,49 +9,37 @@ namespace Backend.Controllers
     [Route("api/authentication")]
     public class AuthenticationController : ControllerBase
     {
-        private readonly IAuthenticationService authenticationService;
+        private readonly IAuthenticationService _authenticationService;
 
         public AuthenticationController(IAuthenticationService authenticationService)
         {
-            this.authenticationService = authenticationService;
+            _authenticationService = authenticationService;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegistrationModel registrationModel)
         {
-            var result = await authenticationService.RegisterUserAsync(registrationModel);
+            var result = await _authenticationService.RegisterUserAsync(registrationModel);
 
-            if (result.Succeeded)
-            {
-                return CreatedAtAction(nameof(Register), new { emial = registrationModel.Email }, null);
-            }
-            else
-            {
-                return BadRequest(result.Errors);
-            }
+            return result.Succeeded ? CreatedAtAction(nameof(Register), new { email = registrationModel.Email }, null) 
+                : BadRequest(result.Errors);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
-            var result = await authenticationService.LoginUserAsync(loginModel);
+            var result = await _authenticationService.LoginUserAsync(loginModel);
 
-            if (result.Succeeded)
-            {
-                return Ok("Login successful");
-            }
-            else
-            {
-                return Unauthorized("Invalid credentials.");
-            }
+            return result.Succeeded ? Ok("Login Successful") : Unauthorized("Invalid credentials");
         }
 
+        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            await authenticationService.LogoutUserAsync();
+            await _authenticationService.LogoutUserAsync();
 
-            return Ok(new { message = "User logged out successfully" });
+            return Ok("User logged out successfully");
         }
     }
 }
