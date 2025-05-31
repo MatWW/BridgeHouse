@@ -27,7 +27,7 @@ public class RedisGameStateRepository : IRedisGameStateRepository
         if (!gameStateAsString.HasValue)
             return null;
 
-        return JsonSerializer.Deserialize<GameState>(gameStateAsString, _jsonOptions);
+        return JsonSerializer.Deserialize<GameState>(gameStateAsString!, _jsonOptions);
     }
 
     public async Task<long> SaveGameStateAsync(GameState gameState)
