@@ -7,20 +7,22 @@ namespace Backend.Services;
 
 public class BiddingService : IBiddingService
 {
-    private readonly IRedisGameStateRepository redisGameStateRepository;
-    private readonly IUserService userService;
+    private readonly IRedisGameStateRepository _redisGameStateRepository;
+    private readonly IUserService _userService;
+    private readonly IGameService _gameService;
 
-    public BiddingService(IRedisGameStateRepository redisGameStateRepository, IUserService userService)
+    public BiddingService(IRedisGameStateRepository redisGameStateRepository, IUserService userService, IGameService gameService)
     {
-        this.redisGameStateRepository = redisGameStateRepository;
-        this.userService = userService;
+        _redisGameStateRepository = redisGameStateRepository;
+        _userService = userService;
+        _gameService = gameService;
     }
 
     public async Task PlaceBidAsync(long gameId, BidAction bidAction)
     {
         var gameState = await LoadAndValidateGameState(gameId);
 
-        string requestSenderId = userService.GetCurrentUserId();
+        string requestSenderId = _userService.GetCurrentUserId();
         ValidatePlayerPermissions(gameState, bidAction, requestSenderId);
 
         var bid = bidAction.Bid;
@@ -36,6 +38,13 @@ public class BiddingService : IBiddingService
 
         if (IsBiddingOver(gameState))
         {
+            var finalContract = gameState.BiddingState.Contract;
+            if (finalContract is null)
+            {
+                await _gameService.EndGameAsync(gameState.Id!.Value);
+                return;
+            }
+
             FinalizeBidding(gameState);
         }
         else
@@ -43,12 +52,12 @@ public class BiddingService : IBiddingService
             gameState.CurrentPlayerId = GetNextPlayerId(gameState, bidder);
         }
 
-        await redisGameStateRepository.SaveGameStateAsync(gameState);
+        await _redisGameStateRepository.SaveGameStateAsync(gameState);
     }
 
     private async Task<GameState> LoadAndValidateGameState(long gameId)
     {
-        var gameState = await redisGameStateRepository.GetGameStateAsync(gameId);
+        var gameState = await _redisGameStateRepository.GetGameStateAsync(gameId);
 
         if (gameState is null)
         {
@@ -72,7 +81,7 @@ public class BiddingService : IBiddingService
             throw new UnauthorizedGameActionException($"Player mismatch in bid action");
     }
 
-    private bool IsBidValid(Bid bid, Player bidder, Contract? currentContract)
+    private static bool IsBidValid(Bid bid, Player bidder, Contract? currentContract)
     {
         if (bid.Value == BiddingValue.PASS)
         {
@@ -92,13 +101,13 @@ public class BiddingService : IBiddingService
         if (bid.Value == BiddingValue.DOUBLE)
         {
             return !currentContract.IsDoubled && !currentContract.IsRedoubled
-                && IsCurrentContractBiddedByOpponent(bid, bidder, currentContract);
+                && IsCurrentContractBiddedByOpponent(bidder, currentContract);
         }
 
         if (bid.Value == BiddingValue.REDOUBLE)
         {
             return currentContract.IsDoubled && !currentContract.IsRedoubled
-                && !IsCurrentContractBiddedByOpponent(bid, bidder, currentContract);
+                && !IsCurrentContractBiddedByOpponent(bidder, currentContract);
         }
 
         return false;
@@ -109,7 +118,7 @@ public class BiddingService : IBiddingService
         return b1.Value > b2.Value || (b1.Value == b2.Value && b1.Suit > b2.Suit);
     }
 
-    private static bool IsCurrentContractBiddedByOpponent(Bid bid, Player bidder, Contract contract)
+    private static bool IsCurrentContractBiddedByOpponent(Player bidder, Contract contract)
     {
         return !AreTeammates(bidder.Position, contract.BidAction.Player.Position);
     }
@@ -184,16 +193,8 @@ public class BiddingService : IBiddingService
     }
 
     private static void FinalizeBidding(GameState gameState)
-    {
-        var finalContract = gameState.BiddingState.Contract;
-        if (finalContract is null)
-        {
-            // game is finished - four passes
-            gameState.GamePhase = GamePhase.PLAYING;
-            return;
-        }
-
-        var suit = finalContract.BidAction.Bid.Suit;
+    { 
+        var suit = gameState.BiddingState.Contract!.BidAction.Bid.Suit;
         var declarer = gameState.BiddingState.BidActions
             .First(b => b.Bid.Suit == suit).Player;
 
