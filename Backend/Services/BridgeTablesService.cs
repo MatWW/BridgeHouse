@@ -168,6 +168,23 @@ public class BridgeTablesService : IBridgeTablesService
 
     public async Task InviteUserToBridgeTableAsync(long bridgeTableId, string userId, Position position)
     {
+        if ((await _redisPlayerStateRepository.GetTableIdOfPlayerAsync(userId)) is not null)
+        {
+            throw new UserAlreadyPartOfTheTableException($"User with id: {userId} is already part of the table");
+        }
+
+        var players = await _redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
+
+        if (players is null)
+        {
+            throw new BridgeTableNotFoundException($"Bridge table with id: {bridgeTableId} was not found");
+        }
+
+        if (players.Where(p => p.Position == position).Any())
+        {
+            throw new PositionAtTableAlreadyTakenException($"Position: {position} at table with id {bridgeTableId} is already taken");
+        }
+
         await _redisPlayerStateRepository.SaveInformationAboutPlayerBeingInvitedToTableAsync(userId, bridgeTableId, position);
     }
 
