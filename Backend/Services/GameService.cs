@@ -1,5 +1,4 @@
-﻿using Backend.Comparers;
-using Backend.Exceptions;
+﻿using Backend.Exceptions;
 using Backend.Repositories;
 using Shared;
 using Shared.Enums;
@@ -8,27 +7,31 @@ namespace Backend.Services;
 
 public class GameService : IGameService
 {
-    private readonly IRedisGameStateRepository redisGameStateRepository;
-    private readonly IDeckService deckService;
-    private readonly Random rnd;
-    private readonly IRedisBridgeTableRepository redisBridgeTableRepository;
-    private readonly IUserService userService;
+    private readonly IRedisGameStateRepository _redisGameStateRepository;
+    private readonly IDeckService _deckService;
+    private readonly Random _rnd;
+    private readonly IRedisBridgeTableRepository _redisBridgeTableRepository;
+    private readonly IUserService _userService;
+    private readonly IRedisPlayerStateRepository _redisPlayerStateRepository;
+    private readonly IGameHistoryService _gameHistoryService;
 
     public GameService(IRedisGameStateRepository redisGameStateRepository, IDeckService deckService, Random rnd, 
-        IRedisBridgeTableRepository redisBridgeTableRepository, IUserService userService)
+        IRedisBridgeTableRepository redisBridgeTableRepository, IUserService userService,
+        IRedisPlayerStateRepository redisPlayerStateRepository, IGameHistoryService gameHistoryService)
     {
-        this.redisGameStateRepository = redisGameStateRepository;
-        this.deckService = deckService;
-        this.rnd = rnd;
-        this.redisBridgeTableRepository = redisBridgeTableRepository;
-        this.userService = userService;
+        _redisGameStateRepository = redisGameStateRepository;
+        _deckService = deckService;
+        _rnd = rnd;
+        _redisBridgeTableRepository = redisBridgeTableRepository;
+        _userService = userService;
+        _redisPlayerStateRepository = redisPlayerStateRepository;
+        _gameHistoryService = gameHistoryService;
     }
 
     public async Task StartGameAsync(long tableId, List<Player> players)
     {
-        //await ValidateTableOwnershipAsync(tableId);
-        //await ValidateTableAsync(tableId);
-        //await ValidatePlayersAsync(tableId, players);
+        await ValidateTableOwnershipAsync(tableId);
+        await ValidateTableAsync(tableId, players);
 
         List<string> playersIds = players.Select(p => p.PlayerId).ToList();
 
@@ -38,25 +41,21 @@ public class GameService : IGameService
             TableId = tableId,
             Players = players,
             GamePhase = GamePhase.BIDDING,
-            PlayerHands = deckService.DealCards(playersIds),
-            CurrentPlayerId = playersIds[rnd.Next(playersIds.Count)],
+            PlayerHands = _deckService.DealCards(playersIds),
+            CurrentPlayerId = playersIds[_rnd.Next(playersIds.Count)],
             BiddingState = new BiddingState(),
             PlayingState = new PlayingState()
         };
 
-        long gameId = await redisGameStateRepository.SaveGameStateAsync(gameState);
+        long gameId = await _redisGameStateRepository.SaveGameStateAsync(gameState);
 
         await AddInformationAboutPlayersBeingInGameAsync(players, gameId);
     }
 
     public async Task<GameState> GetGameStateAsync(long gameId)
     {
-        var gameState = await redisGameStateRepository.GetGameStateAsync(gameId);
-
-        if (gameState is null)
-        {
-            throw new GameNotFoundException($"Game with id: {gameId} was not found");
-        }
+        var gameState = await _redisGameStateRepository.GetGameStateAsync(gameId)
+            ?? throw new GameNotFoundException($"Game with id: {gameId} was not found");
 
         return gameState;
     }
@@ -75,7 +74,7 @@ public class GameService : IGameService
         return gameState.PlayingState;
     }
 
-    public async Task<Contract> GetContractAsync(long gameId)
+    public async Task<Contract?> GetContractAsync(long gameId)
     {
         var gameState = await GetGameStateAsync(gameId);
 
@@ -84,41 +83,35 @@ public class GameService : IGameService
 
     public async Task<Player> GetSignedInPlayerInfoAsync(long gameId)
     {
-        string userId = userService.GetCurrentUserId();
+        string userId = _userService.GetCurrentUserId();
 
         var playerInfo = await GetInfoAboutPlayerInGameAsync(userId, gameId);
-
-        if (playerInfo is null)
-        {
-            // TODO implement specific exception
-            throw new Exception();
-        }
 
         return playerInfo;
     }
 
-    private async Task<Player?> GetInfoAboutPlayerInGameAsync(string playerId,  long gameId)
+    public async Task<Player> GetInfoAboutPlayerInGameAsync(string playerId,  long gameId)
     {
-        var gameState = await redisGameStateRepository.GetGameStateAsync(gameId);
+        var gameState = await _redisGameStateRepository.GetGameStateAsync(gameId);
 
         if (gameState is null)
         {
             throw new GameNotFoundException($"Game with id: {gameId} was not found");
         }
 
-        return gameState.Players.FirstOrDefault(p => p.PlayerId == playerId);
+        return gameState.Players.FirstOrDefault(p => p.PlayerId == playerId)
+            ?? throw new PlayerNotFoundInGameException($"Player with id: {playerId} was not found in game with id: {gameId}");
     }
 
     public async Task<List<Card>> GetPlayerCardsAsync(long gameId, string playerId)
     {
         var gameState = await GetGameStateAsync(gameId);
 
-        string requestSenderId = userService.GetCurrentUserId();
+        string requestSenderId = _userService.GetCurrentUserId();
 
         if (playerId != requestSenderId)
         {
-            throw new Exception();
-            //TODO implement custom exception
+            throw new UnauthorizedAccessException($"Request sender user id does not match playerId: {playerId}");
         }
 
         return gameState.PlayerHands[playerId];
@@ -130,26 +123,12 @@ public class GameService : IGameService
 
         if (gameState.PlayingState.CardPlayActions.Count < 1)
         {
-            throw new Exception();
-            //TODO implement custom exception
+            throw new UnauthorizedAccessException($"Dummies cards from game with id: {gameId} cannot be retrieved before lead");
         }
 
         var dummyId = gameState.PlayingState.Dummy.PlayerId;
 
         return gameState.PlayerHands[dummyId];
-    }
-
-    public async Task<Player> GetPlayerInfoAsync(long gameId, string playerId)
-    {
-        var playerInfo = await GetInfoAboutPlayerInGameAsync(playerId, gameId);
-
-        if (playerInfo is null)
-        {
-            // TODO implement specific exception
-            throw new Exception();
-        }
-
-        return playerInfo;
     }
 
     public async Task<Player> GetCurrentPlayerInfoAsync(long gameId)
@@ -160,20 +139,34 @@ public class GameService : IGameService
 
         var playerInfo = await GetInfoAboutPlayerInGameAsync(currentPlayerId, gameId);
 
+        return playerInfo;
+    }
 
-        if (playerInfo is null)
+    public async Task<GamePhase> GetGamePhaseAsync(long gameId)
+    {
+        var gameState = await GetGameStateAsync(gameId);
+
+        return gameState.GamePhase;
+    }
+
+    public async Task EndGameAsync(long gameId)
+    {
+        var gameState = await GetGameStateAsync(gameId);
+
+        await _redisGameStateRepository.DeleteGameStateAsync(gameId);
+
+        foreach (var player in gameState.Players)
         {
-            // TODO implement specific exception
-            throw new Exception();
+            await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingInGameAsync(player.PlayerId);
         }
 
-        return playerInfo;
+        await _gameHistoryService.SaveGameAsync(gameState);
     }
 
     private async Task ValidateTableOwnershipAsync(long tableId)
     {
-        string requestSenderId = userService.GetCurrentUserId();
-        string? tableAdminId = await redisBridgeTableRepository.GetTableAdminIdAsync(tableId);
+        string requestSenderId = _userService.GetCurrentUserId();
+        string? tableAdminId = await _redisBridgeTableRepository.GetTableAdminIdAsync(tableId);
 
         if (tableAdminId == null || requestSenderId != tableAdminId)
         {
@@ -181,28 +174,16 @@ public class GameService : IGameService
         }
     }
 
-    private async Task ValidateTableAsync(long tableId)
+    private async Task ValidateTableAsync(long tableId, List<Player> players)
     {
-        bool tableExists = await redisBridgeTableRepository.TableExistsAsync(tableId);
+        bool tableExists = await _redisBridgeTableRepository.TableExistsAsync(tableId);
 
         if (!tableExists)
         {
             throw new BridgeTableNotFoundException($"Table with id: {tableId} was not found");
         }
 
-        var dealsIds = await redisBridgeTableRepository.GetDealsIdsAsync(tableId);
-
-        if (dealsIds is null || dealsIds.Count != 0)
-        {
-            throw new GameAlreadyStartedException($"Game at table with id: {tableId} has already started");
-        }
-    }
-
-    private async Task ValidatePlayersAsync(long tableId, List<Player> players)
-    {
-        var tablePlayers = await redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(tableId);
-
-        if (tablePlayers == null || !tablePlayers.SequenceEqual(players, new PlayerComparer()) || tablePlayers.Count != 4)
+        if (players.Count != 4)
         {
             throw new PlayersListNotValidException($"Player list is not valid");
         }
@@ -212,15 +193,8 @@ public class GameService : IGameService
     {
         foreach (var player in players) 
         {
-            await redisGameStateRepository.SaveInformationAboutPlayerBeingInGameAsync(player.PlayerId, gameId);
+            await _redisPlayerStateRepository.SaveInformationAboutPlayerBeingInGameAsync(player.PlayerId, gameId);
         }
-    }
-
-    public async Task<long?> GetSignedInPlayerGameIdAsync()
-    {
-        string userId = userService.GetCurrentUserId();
-
-        return await redisGameStateRepository.GetGameIdOfPlayerAsync(userId);
     }
 }
 
