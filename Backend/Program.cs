@@ -32,7 +32,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = false;
     options.Cookie.SameSite = SameSiteMode.None;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    };
 });
 
 
@@ -64,6 +70,10 @@ builder.Services.AddScoped<IRedisGameStateRepository,  RedisGameStateRepository>
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IBiddingService, BiddingService>();
 builder.Services.AddScoped<IPlayingService, PlayingService>();
+builder.Services.AddScoped<IRedisPlayerStateRepository, RedisPlayerStateRepository>();
+builder.Services.AddScoped<IPlayerStateService, PlayerStateService>();
+builder.Services.AddScoped<IGameHistoryRepository, GameHistoryRepository>();
+builder.Services.AddScoped<IGameHistoryService, GameHistoryService>();
 
 builder.Services.AddProblemDetails();
 
@@ -76,6 +86,7 @@ builder.Services.AddExceptionHandler<PlayersListNotValidExceptionHandler>();
 builder.Services.AddExceptionHandler<GameAlreadyStartedExceptionHandler>();
 builder.Services.AddExceptionHandler<GameNotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
 builder.Services.AddSingleton<Random>();
 
 builder.Services.AddLogging();
