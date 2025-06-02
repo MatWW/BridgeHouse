@@ -7,25 +7,28 @@ namespace Backend.Services;
 
 public class BridgeTablesService : IBridgeTablesService
 {
-    private readonly IRedisBridgeTableRepository redisBridgeTableRepository;
-    private readonly IUserService userService;
-    private readonly IUserRepository userRepository;
+    private readonly IRedisBridgeTableRepository _redisBridgeTableRepository;
+    private readonly IUserService _userService;
+    private readonly IUserRepository _userRepository;
+    private readonly IRedisPlayerStateRepository _redisPlayerStateRepository;
 
-    public BridgeTablesService(IRedisBridgeTableRepository redisTableRepository, IUserService userService, IUserRepository userRepository)
+    public BridgeTablesService(IRedisBridgeTableRepository redisTableRepository, IUserService userService, IUserRepository userRepository,
+        IRedisPlayerStateRepository redisPlayerStateRepository)
     {
-        this.redisBridgeTableRepository = redisTableRepository;
-        this.userService = userService;
-        this.userRepository = userRepository;
+        _redisBridgeTableRepository = redisTableRepository;
+        _userService = userService;
+        _userRepository = userRepository;
+        _redisPlayerStateRepository = redisPlayerStateRepository;
     }
 
     public async Task<List<BridgeTable>> GetAllBridgeTablesAsync()
     {
-        return await redisBridgeTableRepository.GetAllBridgeTablesAsync();
+        return await _redisBridgeTableRepository.GetAllBridgeTablesAsync();
     }
 
     public async Task<BridgeTable> GetBridgeTableByIdAsync(long bridgeTableId)
     {
-        BridgeTable? table = await redisBridgeTableRepository.GetBridgeTableByIdAsync(bridgeTableId);
+        BridgeTable? table = await _redisBridgeTableRepository.GetBridgeTableByIdAsync(bridgeTableId);
 
         if (table is null)
         {
@@ -37,12 +40,11 @@ public class BridgeTablesService : IBridgeTablesService
 
     public async Task<BridgeTable> CreateBridgeTableAsync(CreateBridgeTableRequestDTO request)
     {
-        string creatorId = userService.GetCurrentUserId();
+        string creatorId = _userService.GetCurrentUserId();
         var creator = new Player
         {
             PlayerId = creatorId,
-            // TODO get real username
-            Nickname = "username",
+            Nickname = await _userRepository.GetUserNicknameByIdAsync(creatorId) ?? "",
             Position = Position.N
         };
 
@@ -56,19 +58,35 @@ public class BridgeTablesService : IBridgeTablesService
             DealsIds = []
         };
 
-        return await redisBridgeTableRepository.SaveBridgeTableAsync(newBridgeTable);
+        var createdTable = await _redisBridgeTableRepository.SaveBridgeTableAsync(newBridgeTable);
+
+        await _redisPlayerStateRepository.SaveInformationAboutPlayerBeingPartOfTableAsync(creatorId, createdTable.Id!.Value);
+
+        return createdTable;
     }
 
     public async Task DeleteBridgeTableAsync(long bridgeTableId)
     {
         bool requestSenderValid = await ValidateBridgeTableOwnershipAsync(bridgeTableId);
 
-        if (requestSenderValid)
+        if (!requestSenderValid)
         {
             throw new BridgeTableOwnershipException($"User sending request is not owner of bridge table {bridgeTableId}");
         }
 
-        bool deleted = await redisBridgeTableRepository.DeleteBridgeTableAsync(bridgeTableId);
+        List<Player>? players = await _redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
+
+        if (players is null)
+        {
+            throw new BridgeTableNotFoundException($"Bridge table with id: {bridgeTableId} was not found");
+        }
+
+        foreach (var player in players)
+        {
+            await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingPartOfTableAsync(player.PlayerId);
+        }
+
+        bool deleted = await _redisBridgeTableRepository.DeleteBridgeTableAsync(bridgeTableId);
 
         if (!deleted)
         {
@@ -78,21 +96,14 @@ public class BridgeTablesService : IBridgeTablesService
 
     public async Task AddUserToBridgeTableAsync(long bridgeTableId, string userId, Position position)
     {
-        bool requestSenderValid = await ValidateBridgeTableOwnershipAsync(bridgeTableId);
-
-        if (requestSenderValid)
-        {
-            throw new BridgeTableOwnershipException($"User sending request is not owner of bridge table {bridgeTableId}");
-        }
-
-        bool userExists = await userRepository.UserExistsAsync(userId);
+        bool userExists = await _userRepository.UserExistsAsync(userId);
 
         if (!userExists)
         {
             throw new UserNotFoundException($"User with id: {userId} does not exist");
         }
 
-        List<Player>? players = await redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
+        List<Player>? players = await _redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
 
         if (players is null)
         {
@@ -102,8 +113,7 @@ public class BridgeTablesService : IBridgeTablesService
         var player = new Player
         {
             PlayerId = userId,
-            // TODO get real username
-            Nickname = "username",
+            Nickname = await _userRepository.GetUserNicknameByIdAsync(userId) ?? "",
             Position = position
         };
 
@@ -114,26 +124,28 @@ public class BridgeTablesService : IBridgeTablesService
 
         players.Add(player);
 
-        await redisBridgeTableRepository.UpdateListOfBridgeTablePlayersAsync(bridgeTableId, players);
+        await _redisBridgeTableRepository.UpdateListOfBridgeTablePlayersAsync(bridgeTableId, players);
+
+        await _redisPlayerStateRepository.SaveInformationAboutPlayerBeingPartOfTableAsync(userId, bridgeTableId);
     }
 
     public async Task RemoveUserFromBridgeTableAsync(long bridgeTableId, string userId)
     {
         bool requestSenderValid = await ValidateBridgeTableOwnershipAsync(bridgeTableId);
 
-        if (requestSenderValid)
+        if (!requestSenderValid && _userService.GetCurrentUserId() != userId)
         {
             throw new BridgeTableOwnershipException($"User sending request is not owner of bridge table {bridgeTableId}");
         }
 
-        bool userExists = await userRepository.UserExistsAsync(userId);
+        bool userExists = await _userRepository.UserExistsAsync(userId);
 
         if (!userExists)
         {
             throw new UserNotFoundException($"User with id: {userId} does not exist");
         }
 
-        List<Player>? players = await redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
+        List<Player>? players = await _redisBridgeTableRepository.GetListOfBridgeTablePalyersAsync(bridgeTableId);
 
         if (players is null)
         {
@@ -149,13 +161,39 @@ public class BridgeTablesService : IBridgeTablesService
 
         players.Remove(player);
 
-        await redisBridgeTableRepository.UpdateListOfBridgeTablePlayersAsync(bridgeTableId, players);
+        await _redisBridgeTableRepository.UpdateListOfBridgeTablePlayersAsync(bridgeTableId, players);
+
+        await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingPartOfTableAsync(userId);
+    }
+
+    public async Task InviteUserToBridgeTableAsync(long bridgeTableId, string userId, Position position)
+    {
+        await _redisPlayerStateRepository.SaveInformationAboutPlayerBeingInvitedToTableAsync(userId, bridgeTableId, position);
+    }
+
+    public async Task AcceptInviteToBridgeTableAsync(long bridgeTableId, string userId)
+    {
+        Position? position = await _redisPlayerStateRepository.GetPositionOfPlayerInviteAsync(userId);
+
+        if (position is null)
+        {
+            throw new InviteNotFoundException($"Valid invite of user with id: {userId} was not found");
+        }
+
+        await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingInvitedToTableAsync(userId);
+
+        await AddUserToBridgeTableAsync(bridgeTableId, userId, position.Value);
+    }
+
+    public async Task DeclineInviteToBridgeTableAsync(string userId)
+    {
+        await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingInvitedToTableAsync(userId);
     }
 
     public async Task<bool> ValidateBridgeTableOwnershipAsync(long bridgeTableId)
     {
-        string requestSenderId = userService.GetCurrentUserId();
-        string? bridgeTableAdminId = await redisBridgeTableRepository.GetTableAdminIdAsync(bridgeTableId);
+        string requestSenderId = _userService.GetCurrentUserId();
+        string? bridgeTableAdminId = await _redisBridgeTableRepository.GetTableAdminIdAsync(bridgeTableId);
 
         return requestSenderId == bridgeTableAdminId;
     }
