@@ -8,20 +8,22 @@ namespace Backend.Services;
 
 public class PlayingService : IPlayingService
 {
-    private readonly IRedisGameStateRepository redisGameStateRepository;
-    private readonly IUserService userService;
+    private readonly IRedisGameStateRepository _redisGameStateRepository;
+    private readonly IUserService _userService;
+    private readonly IGameService _gameService;
 
-    public PlayingService(IRedisGameStateRepository redisGameStateRepository, IUserService userService)
+    public PlayingService(IRedisGameStateRepository redisGameStateRepository, IUserService userService, IGameService gameService)
     {
-        this.redisGameStateRepository = redisGameStateRepository;
-        this.userService = userService;
+        _redisGameStateRepository = redisGameStateRepository;
+        _userService = userService;
+        _gameService = gameService;
     }
 
     public async Task PlayCardAsync(long gameId, CardPlayAction cardPlayAction)
     {
         var gameState = await LoadAndValidateGameState(gameId);
 
-        string requestSenderId = userService.GetCurrentUserId();
+        string requestSenderId = _userService.GetCurrentUserId();
         ValidatePlayerPermissions(gameState, cardPlayAction, requestSenderId);
 
         if (!IsPlayValid(gameState, cardPlayAction))
@@ -29,35 +31,19 @@ public class PlayingService : IPlayingService
             throw new IllegalCardPlayException("This card play is not valid");
         }
 
-        gameState.PlayingState.CardPlayActions.Add(cardPlayAction);
+        ApplyCardPlay(gameState, cardPlayAction);
 
-        var playerHand = gameState.PlayerHands[gameState.CurrentPlayerId];
-        playerHand.RemoveAll(c => c.Suit == cardPlayAction.CardPlayed.Suit && c.Value == cardPlayAction.CardPlayed.Value);
+        await _redisGameStateRepository.SaveGameStateAsync(gameState);
 
-        var cardsOnTable = gameState.PlayingState.CardsOnTable;
-
-        if (cardsOnTable.Count == 4)
+        if (AllTricksPlayed(gameState.PlayingState))
         {
-            gameState.PlayingState.CardsOnTable = [];
+            await _gameService.EndGameAsync(gameId);
         }
-
-        gameState.PlayingState.CardsOnTable.Add(cardPlayAction);
-
-        if (gameState.PlayingState.CardsOnTable.Count < 4)
-        {
-            gameState.CurrentPlayerId = GetNextPlayerId(gameState, cardPlayAction.Player);
-        }
-        else
-        {
-            FinalizeTrick(gameState, cardsOnTable);
-        }
-
-        await redisGameStateRepository.SaveGameStateAsync(gameState);
     }
 
     private async Task<GameState> LoadAndValidateGameState(long gameId)
     {
-        var gameState = await redisGameStateRepository.GetGameStateAsync(gameId);
+        var gameState = await _redisGameStateRepository.GetGameStateAsync(gameId);
 
         if (gameState is null)
         {
@@ -129,6 +115,32 @@ public class PlayingService : IPlayingService
         return hand.Any(c => c.Suit == card.Suit);
     }
 
+    private static void ApplyCardPlay(GameState gameState, CardPlayAction cardPlayAction)
+    {
+        gameState.PlayingState.CardPlayActions.Add(cardPlayAction);
+
+        var playerHand = gameState.PlayerHands[gameState.CurrentPlayerId];
+        playerHand.RemoveAll(c => c.Suit == cardPlayAction.CardPlayed.Suit && c.Value == cardPlayAction.CardPlayed.Value);
+
+        var cardsOnTable = gameState.PlayingState.CardsOnTable;
+
+        if (cardsOnTable.Count == 4)
+        {
+            gameState.PlayingState.CardsOnTable = [];
+        }
+
+        gameState.PlayingState.CardsOnTable.Add(cardPlayAction);
+
+        if (gameState.PlayingState.CardsOnTable.Count < 4)
+        {
+            gameState.CurrentPlayerId = GetNextPlayerId(gameState, cardPlayAction.Player);
+        }
+        else
+        {
+            FinalizeTrick(gameState, cardsOnTable);
+        }
+    }
+
     private static void FinalizeTrick(GameState gameState, List<CardPlayAction> cardsOnTable)
     {
         var contractSuit = gameState.BiddingState.Contract!.BidAction.Bid.Suit;
@@ -187,4 +199,7 @@ public class PlayingService : IPlayingService
         var nextPosition = NextClockwise[player.Position];
         return gameState.Players.First(p => p.Position == nextPosition).PlayerId;
     }
+
+    private static bool AllTricksPlayed(PlayingState state) =>
+        state.NSTricks + state.EWTricks >= 13;
 }
