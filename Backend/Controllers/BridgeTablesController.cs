@@ -18,14 +18,6 @@ public class BridgeTableController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet]
-    public async Task<ActionResult<List<BridgeTable>>> GetAllBridgeTables()
-    {
-        List<BridgeTable> tables = await bridgeTablesService.GetAllBridgeTablesAsync();
-
-        return Ok(tables);
-    }
-
     [HttpGet("{bridgeTableId:long}")]
     public async Task<ActionResult<BridgeTable>> GetBridgeTable(int bridgeTableId)
     {
@@ -33,7 +25,8 @@ public class BridgeTableController : ControllerBase
 
         return Ok(table);
     }
-    
+
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<BridgeTable>> CreateBridgeTable([FromBody] CreateBridgeTableRequestDTO request)
     {
@@ -44,14 +37,37 @@ public class BridgeTableController : ControllerBase
         return Created(url, createdTable);
     }
 
-    [HttpPatch("{bridgeTableId:long}/add-user/{userId}")]
-    public async Task<ActionResult<BridgeTable>> AddUserToBridgeTable(long bridgeTableId, string userId, Position position)
+    [Authorize]
+    [HttpPost("{bridgeTableId:long}/invite/{userId}")]
+    public async Task<IActionResult> InviteUserToBridgeTable(long bridgeTableId, string userId,
+        [FromBody] InvitePlayerToTableDTO dto)
     {
-        await bridgeTablesService.AddUserToBridgeTableAsync(bridgeTableId, userId, position);
+        Position position = dto.Position;
+
+        await bridgeTablesService.InviteUserToBridgeTableAsync(bridgeTableId, userId, position);
 
         return Ok();
     }
 
+    [Authorize]
+    [HttpPost("{bridgeTableId:long}/invite/{userId}/accept")]
+    public async Task<IActionResult> AcceptInviteToBridgeTable(long bridgeTableId, string userId)
+    {
+        await bridgeTablesService.AcceptInviteToBridgeTableAsync(bridgeTableId, userId);
+
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpDelete("invite/{userId}/decline")]
+    public async Task<IActionResult> DeclineInviteToBridgeTable(string userId)
+    {
+        await bridgeTablesService.DeclineInviteToBridgeTableAsync(userId);
+
+        return Ok();
+    }
+
+    [Authorize]
     [HttpPatch("{bridgeTableId:long}/remove-user/{userId}")]
     public async Task<ActionResult<BridgeTable>> RemoveUserFromBridgeTable(long bridgeTableId, string userId)
     {
@@ -60,6 +76,7 @@ public class BridgeTableController : ControllerBase
         return Ok();
     }
 
+    [Authorize]
     [HttpDelete("{bridgeTableId:long}")]
     public async Task<IActionResult> DeleteBridgeTable(long bridgeTableId)
     {
