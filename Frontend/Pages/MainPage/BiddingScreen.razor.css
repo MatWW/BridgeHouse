@@ -1,0 +1,238 @@
+﻿.bidding {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: whitesmoke;
+}
+
+.bidding-container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 1416px;
+    height: 685px;
+
+    transform: scale(1);
+    transform-origin: center;
+    transition: transform 0.3s ease-out; 
+    flex-shrink: 0;
+}
+
+.bidding-screen {
+    border: 2px solid black;
+    border-radius: 15px;
+    height: 350px;
+    width: 600px;
+    overflow: auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    background-color: white;
+    font-weight: bold;
+    font-size: 25px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.players {
+    border-bottom: 2px solid black;
+    height: 60px;
+    width: auto;
+    display: flex;
+    justify-content: space-between;
+}
+
+.player {
+    border-right: 2px solid black;
+    flex: 1;
+    height: auto;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.player2 {
+    background-color: floralwhite;
+}
+
+.player4 {
+    border-right: 0px;
+    background-color: floralwhite;
+}
+
+.bidding-panel {
+    border: 2px solid black;
+    border-radius: 15px;
+    height: 175px;
+    width: 600px;
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 2fr 5fr;
+    background-color: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.panel-box-2 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+.clubs {
+    display: flex;
+    justify-content: space-evenly;
+    color: darkgreen;
+}
+
+.diamonds {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.hearts {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.spades {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.no-trumps {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.panel-box-1 {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.pass {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.pass button {
+    background-color: forestgreen;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.2s;
+}
+
+.pass button:hover {
+    background-color: green;
+}
+
+.x-and-xx {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.double {
+    padding: 10px;
+    background-color: red;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.2s;
+    border-radius: 8px;
+    font-weight: bold;
+    border: none;
+    color: white;
+}
+
+.redouble {
+    padding: 10px;
+    background-color: dodgerblue;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.2s;
+    border-radius: 8px;
+    font-weight: bold;
+    border: none;
+    color: white;
+}
+
+.bids {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.odd {
+    background-color: floralwhite;
+}
+
+.bidded {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+}
+
+.club {
+    color: darkgreen;
+}
+
+.diamond {
+    color: darkorange;
+}
+
+.heart {
+    color: indianred;
+}
+
+.spade {
+    color: #443A3A;
+}
+
+.no-trump {
+    color: lightslategrey;
+}
+
+.x {
+    color: red;
+}
+
+.xx {
+    color: dodgerblue;
+}
+
+.PASS {
+    color: green;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.hand {
+    width: 1416px;
+    height: 140px;
+}
+
+@media (max-width: 1416px) {
+    .bidding-container {
+        transform: scale(var(--widthScale));
+    }
+}
+
+@media (max-height: 685px) {
+    .bidding-container {
+        transform: scale(var(--heightScale));
+    }
+}
+
+@media (max-width: 1416px) and (max-height: 685px) {
+    .bidding-container {
+        transform: scale(min(var(--widthScale), var(--heightScale)));
+    }
+}

@@ -1,0 +1,139 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client;
+@using Shared;
+@using Shared.Enums;
+@using Frontend.Components;
+@using Shared.Enums.Extensions;
+@using Frontend.Services;
+@using Frontend.Services.Interfaces;
+@using Frontend.ViewModels;
+
+@page "/bidding-screen"
+
+@inject IApiService ApiService
+@inject NavigationManager NavigationManager
+@inject ISignalRService SignalRService
+
+@if (vm.BiddingState is null)
+{
+	<p><em>loading...</em></p>
+}
+else
+{
+	<div class="bidding">
+		<div class="bidding-container">
+			<div class="bidding-screen">
+				<div class="players">
+					<div class="player player1">
+						<p>W</p>
+					</div>
+					<div class="player player2">
+						<p>N</p>
+					</div>
+					<div class="player player3">
+						<p>E</p>
+					</div>
+					<div class="player player4">
+						<p>S</p>
+					</div>
+				</div>
+				<div class="bids">
+					@{
+						int ind = 0;
+					}
+					@for (; ind < vm.GetStartingPositionOffset(); ind++)
+					{
+						<div class="@(ind%2==0 ? "even" : "odd")"></div>
+					}
+					@foreach (var bidAction in vm.BiddingState.BidActions) {
+						<div class="bidded @bidAction.Bid.Suit.ToLowercaseString() @bidAction.Bid.Value.ToSymbol() @(ind%2==0 ? "even" : "odd")">
+							<p>@bidAction.Bid.Value.ToSymbol() @bidAction.Bid.Suit.ToSymbol()</p>
+						</div>
+
+						ind++;
+					}
+				</div>
+			</div>
+			@if (vm.IsSignedInPlayerTurn())
+			{
+				<div class="bidding-panel">
+					<div class="panel-box-1">
+						<div class="pass">
+							<button @onclick="() => vm.PlaceBidAsync(BiddingSuit.NONE, BiddingValue.PASS)">Pass</button>
+						</div>
+						<div class="x-and-xx">
+							<button class="@(vm.CanDouble() ? "" : "hidden") double" @onclick="() =>  vm.PlaceBidAsync(BiddingSuit.NONE, BiddingValue.DOUBLE)">X</button>
+							<button class="@(vm.CanRedouble() ? "" : "hidden") redouble" @onclick="() => vm.PlaceBidAsync(BiddingSuit.NONE, BiddingValue.REDOUBLE)">XX</button>
+						</div>
+					</div>
+					<div class="panel-box-2">
+						<div class="clubs">
+							@for (int i = 1; i <= 7; i++)
+							{
+								int currentNumber = i;
+								<BiddingButton VisibilityClass="@(currentNumber < (int)vm.GetLowestAllowedValue(BiddingSuit.CLUB) ? "hidden" : "")"
+								ColorClass="club"
+								OnClick="() => vm.PlaceBidAsync(BiddingSuit.CLUB, (BiddingValue)currentNumber)" Number=currentNumber Icon="♣" />
+							}
+						</div>
+						<div class="diamonds">
+							@for (int i = 1; i <= 7; i++)
+							{
+								int currentNumber = i;
+								<BiddingButton VisibilityClass="@(currentNumber < (int)vm.GetLowestAllowedValue(BiddingSuit.DIAMOND) ? "hidden" : "")"
+								ColorClass="diamond"
+								OnClick="() => vm.PlaceBidAsync(BiddingSuit.DIAMOND, (BiddingValue)currentNumber)" Number=currentNumber Icon="♦" />
+							}
+						</div>
+						<div class="hearts">
+							@for (int i = 1; i <= 7; i++)
+							{
+								int currentNumber = i;
+								<BiddingButton VisibilityClass="@(currentNumber < (int)vm.GetLowestAllowedValue(BiddingSuit.HEART) ? "hidden" : "")"
+								ColorClass="heart"
+								OnClick="() => vm.PlaceBidAsync(BiddingSuit.HEART, (BiddingValue)currentNumber)" Number=currentNumber Icon="♥" />
+							}
+						</div>
+						<div class="spades">
+							@for (int i = 1; i <= 7; i++)
+							{
+								int currentNumber = i;
+								<BiddingButton VisibilityClass="@(currentNumber < (int)vm.GetLowestAllowedValue(BiddingSuit.SPADE) ? "hidden" : "")"
+								ColorClass="spade"
+				            	OnClick="() => vm.PlaceBidAsync(BiddingSuit.SPADE, (BiddingValue)currentNumber)" Number=currentNumber Icon="♠" />
+							}
+						</div>
+						<div class="no-trumps">
+							@for (int i = 1; i <= 7; i++)
+							{
+								int currentNumber = i;
+								<BiddingButton VisibilityClass="@(currentNumber < (int)vm.GetLowestAllowedValue(BiddingSuit.NO_TRUMP) ? "hidden" : "")"
+								ColorClass="no-trump"
+								OnClick="() => vm.PlaceBidAsync(BiddingSuit.NO_TRUMP, (BiddingValue)currentNumber)" Number=currentNumber Icon="NT" />
+							}
+						</div>
+					</div>
+				</div>
+			}
+
+			<div class="hand">
+				<HandComponent Cards="@vm.PlayerCards" />
+			</div>
+
+		</div>
+	</div>
+}
+
+@code {
+	[Parameter] public long gameId { get; set; }
+	[Parameter] public long tableId { get; set; }
+
+	private BiddingViewModel vm;
+
+	protected override async Task OnInitializedAsync()
+	{
+		vm = new BiddingViewModel(gameId, tableId, ApiService, SignalRService);
+		vm.OnStateChanged += async () => await InvokeAsync(StateHasChanged);
+		await vm.InitializeAsync();
+	}
+}
+
