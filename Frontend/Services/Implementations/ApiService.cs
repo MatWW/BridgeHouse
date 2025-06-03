@@ -51,6 +51,72 @@ public class ApiService : IApiService
         return playingState;
     }
 
+    public async Task<BridgeTable> GetBridgeTableAsync(long tableId)
+    {
+        var table = await _httpClient.GetFromJsonAsync<BridgeTable>($"api/bridge-tables/{tableId}")
+            ?? throw new InvalidOperationException("Api did not return excepted data");
+
+        return table;
+    }
+
+    public async Task CreateBridgeTableAsync()
+    {
+        await _httpClient.PostAsJsonAsync<CreateBridgeTableRequestDTO>($"api/bridge-tables", new CreateBridgeTableRequestDTO { NumberOfDeals = 1});
+    }
+
+    public async Task<string> GetIdByNickname(string nickname)
+    {
+        var id = await _httpClient.GetStringAsync($"api/users/id/{nickname}")
+            ?? throw new InvalidOperationException("Api did not return excepted data");
+
+        return id;
+    }
+
+    public async Task SendInviteAsync(long tableId, string userId, Position position)
+    {
+        var dto = new InvitePlayerToTableDTO { Position = position };
+
+        await _httpClient.PostAsJsonAsync($"api/bridge-tables/{tableId}/invite/{userId}", dto);
+    }
+
+    public async Task AcceptInviteAsync()
+    {
+        await _httpClient.PostAsync($"api/bridge-tables/invite/accept/me", null);
+    }
+
+    public async Task DeclineInviteAsync()
+    {
+        await _httpClient.DeleteAsync($"api/bridge-tables/invite/decline/me");
+    }
+
+    public async Task LeaveTableAsync(long tableId)
+    {
+        await _httpClient.PatchAsync($"api/bridge-tables/{tableId}/leave", null);
+    }
+
+    public async Task DeleteTableAsync(long tableId)
+    {
+        await _httpClient.DeleteAsync($"api/bridge-tables/{tableId}");
+    }
+
+    public async Task<string> GetSignedInUserIdAsync()
+    {
+        var id =await _httpClient.GetStringAsync("api/users/id/me")
+            ?? throw new InvalidOperationException("Api did not return expected data");
+
+        return id;
+    }
+
+    public async Task StartGameAsync(long tableId, List<Player> players)
+    {
+        var dto = new StartGameRequestDTO
+        {
+            tableId = tableId,
+            players = players
+        };
+        await _httpClient.PostAsJsonAsync("api/game/startGame", dto);
+    }
+
     public async Task<Player> GetSignedInPlayerInfoAsync(long gameId)
     {
         var signedInPlayer = await _httpClient.GetFromJsonAsync<Player>($"api/game/{gameId}/playerInfo/me")
@@ -107,5 +173,13 @@ public class ApiService : IApiService
     public async Task PlaceBidAsync(long gameId, BidAction bidAction)
     {
         await _httpClient.PostAsJsonAsync($"api/game/{gameId}/bid", bidAction);
+    }
+
+    public async Task<List<PlayerGameShortInfoDTO>> GetSignedInUserGameHistoryAsync()
+    {
+        var history = await _httpClient.GetFromJsonAsync<List<PlayerGameShortInfoDTO>>($"api/game-history/short-info/me")
+            ?? throw new InvalidOperationException("Api did not return expected data");
+
+        return history;
     }
 }
