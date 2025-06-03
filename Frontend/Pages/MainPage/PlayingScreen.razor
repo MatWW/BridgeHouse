@@ -1,0 +1,102 @@
+﻿@page "/playing-screen"
+
+@using Frontend.Components
+@using Frontend.Services.Interfaces
+@using Shared
+@using Shared.Enums
+@using Microsoft.AspNetCore.SignalR.Client
+@using Frontend.ViewModels
+
+@inject IApiService ApiService
+@inject ISignalRService SignalRService
+
+@if (vm.CardsToDisplay.Count == 0)
+{
+	<p>loading...</p>
+}
+else
+{
+	<div class="playing">
+		<div class="playing-screen">
+			<div class="cards-on-table">
+				<div class="card bottom">
+					@if (vm.CardsToDisplay[0] is not null)
+					{
+						<CardComponent Card="@vm.CardsToDisplay[0]" />
+					}
+				</div>
+				<div class="card left">
+					@if (vm.CardsToDisplay[1] is not null)
+					{
+						<CardComponent Card="@vm.CardsToDisplay[1]" />
+					}	
+				</div>
+				<div class="card top">
+					@if (vm.CardsToDisplay[2] is not null)
+					{
+						<CardComponent Card="@vm.CardsToDisplay[2]" />
+					}
+				</div>
+				<div class="card right">
+					@if (vm.CardsToDisplay[3] is not null)
+					{
+						<CardComponent Card="@vm.CardsToDisplay[3]" />
+					}
+				</div>
+			</div>
+			<div class="hand">
+				<HandComponent Cards="@vm.PlayerCards" OnCardClicked="vm.HandleCardClick"/>
+			</div>
+			<div class="left-player-cards">
+				@if (vm.GetIndexForPosition(vm.Dummy.Position, vm.SignedInPlayer.Position) == 1 && vm.CanShowDummy)
+				{
+					<HandSideViewComponent Cards="@vm.DummiesCards" Side = "left"/>
+				}
+				else
+				{
+					<HiddenCardsComponent />
+				}
+			</div>
+			<div class="top-player-cards">
+				@if (vm.GetIndexForPosition(vm.Dummy.Position, vm.SignedInPlayer.Position) == 2 && vm.CanShowDummy)
+				{
+					<HandComponent Cards="@vm.DummiesCards" OnCardClicked="vm.HandleCardClick"/>
+				}
+				else
+				{
+					<HiddenCardsComponent />
+				}
+			</div>
+			<div class="right-player-cards">
+				@if (vm.GetIndexForPosition(vm.Dummy.Position, vm.SignedInPlayer.Position) == 3 && vm.CanShowDummy)
+				{
+					<HandSideViewComponent Cards="@vm.DummiesCards" Side="right"/>
+				}
+				else
+				{
+					<HiddenCardsComponent />
+				}
+			</div>
+			<div class="game-info-box">
+				<GameInfoBoxComponent NSTricks="@vm.PlayingState.NSTricks"
+				EWTricks="@vm.PlayingState.EWTricks"
+				Contract="@vm.Contract">
+				</GameInfoBoxComponent>
+			</div>
+		</div>
+	</div>
+}
+
+@code {
+	[Parameter] public long gameId { get; set; }
+	[Parameter] public long tableId { get; set; }
+
+	private PlayingViewModel vm;
+
+	protected override async Task OnInitializedAsync()
+	{
+		vm = new PlayingViewModel(gameId, tableId, ApiService, SignalRService);
+		vm.OnStateChanged += async () => await InvokeAsync(StateHasChanged);
+		await vm.InitializeAsync();
+	}
+}
