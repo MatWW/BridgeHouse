@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using Backend.Repositories;
-using Backend.Models;
 using Backend.ExceptionHandlers;
+using Backend.Data.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
