@@ -1,0 +1,83 @@
+﻿@using Shared;
+@using Shared.Enums;
+@using Frontend.Components;
+@using Frontend.ViewModels;
+@using Frontend.Services.Interfaces;
+
+@inject IApiService ApiService
+@inject ISignalRService SignalRService
+
+@if (viewModel?.BridgeTable is not null)
+{
+    <div class="bridge-table-page">
+        <div class="bridge-table">
+
+            <div class="players">
+                <div class="player top">
+                    <p>N @(viewModel.GetPlayerAtPosition(Position.N)?.Nickname ?? "")</p>
+                </div>
+                <div class="middle-row">
+                    <div class="player left">
+                        <p>W @(viewModel.GetPlayerAtPosition(Position.W)?.Nickname ?? "")</p>
+                    </div>
+                    <div class="player right">
+                        <p>@(viewModel.GetPlayerAtPosition(Position.E)?.Nickname ?? "") E</p>
+                    </div>
+                </div>
+                <div class="player bottom">
+                    <p>S @(viewModel.GetPlayerAtPosition(Position.S)?.Nickname ?? "")</p>
+                </div>
+            </div>
+
+            <div class="invite-panel">
+                @if (viewModel.UserId == viewModel.BridgeTable.AdminId)
+                {
+                    <input type="text" @bind="viewModel.NicknameInput" />
+                    <select @bind="viewModel.SelectedPosition">
+                        @foreach (var pos in Enum.GetValues(typeof(Position)))
+                        {
+                            <option value="@pos">@pos</option>
+                        }
+                    </select>
+                    <button @onclick="SendInvite">Send Invite</button>
+                }
+            </div>
+
+            <div class="buttons">
+                @if (viewModel.UserId == viewModel.BridgeTable.AdminId)
+                {
+                    <button @onclick="StartGame">Start Game</button>
+                    <button @onclick="DeleteTable">Delete Table</button>
+                }
+                else
+                {
+                    <button @onclick="LeaveTable">Leave Table</button>
+                }
+            </div>
+        </div>
+
+        <div class="game-history">
+            <GameHistoryComponent />
+        </div>
+
+    </div>
+}
+
+@code {
+	[Parameter]
+	public long bridgeTableId { get; set; }
+
+	private BridgeTableViewModel viewModel;
+
+	protected override async Task OnInitializedAsync()
+	{
+		viewModel = new BridgeTableViewModel(ApiService, SignalRService);
+		viewModel.OnStateChanged += async () => await InvokeAsync(StateHasChanged);
+		await viewModel.InitializeAsync(bridgeTableId);
+	}
+
+	private async Task SendInvite() => await viewModel.SendInviteAsync();
+	private async Task StartGame() => await viewModel.StartGameAsync();
+	private async Task DeleteTable() => await viewModel.DeleteTableAsync();
+	private async Task LeaveTable() => await viewModel.LeaveTableAsync();
+}
