@@ -1,8 +1,9 @@
-﻿using Shared;
+﻿using Frontend.Services.Interfaces;
+using Shared;
 using Shared.Enums;
 using System.Net.Http.Json;
 
-namespace Frontend.Services;
+namespace Frontend.Services.Implementations;
 
 public class ApiService : IApiService
 {

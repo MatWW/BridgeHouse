@@ -1,7 +1,7 @@
 ﻿using Shared;
 using Shared.Enums;
 
-namespace Frontend.Services;
+namespace Frontend.Services.Interfaces;
 
 public interface IApiService
 {
