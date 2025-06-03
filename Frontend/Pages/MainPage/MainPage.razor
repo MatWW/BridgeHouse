@@ -1,0 +1,45 @@
+﻿@page "/"
+
+@using Shared
+@using Shared.Enums
+@using Frontend.Services;
+@using Frontend.Services.Interfaces
+@using Frontend.ViewModels
+@inject IApiService ApiService
+@inject ISignalRService SignalRService
+
+@if (viewModel.PlayerState == PlayerState.NONE)
+{
+    <CreateTablePage />
+}
+else if (viewModel.PlayerState == PlayerState.INVITED)
+{
+    <InvitePage />
+}
+else if (viewModel.PlayerState == PlayerState.AT_TABLE)
+{
+    <BridgeTablePage bridgeTableId="@viewModel.TableId.Value" />
+}
+else if (viewModel.PlayerState == PlayerState.IN_GAME)
+{
+    if (viewModel.GamePhase == GamePhase.BIDDING)
+    {
+        <BiddingScreen gameId="@viewModel.GameId.Value" tableId="@viewModel.TableId.Value" />
+    }
+    else if (viewModel.GamePhase == GamePhase.PLAYING)
+    {
+        <PlayingScreen gameId="@viewModel.GameId.Value" tableId="@viewModel.TableId.Value" />
+    }
+}
+
+@code {
+	private MainPageViewModel viewModel;
+
+	protected override async Task OnInitializedAsync()
+	{
+		viewModel = new MainPageViewModel(ApiService, SignalRService);
+		viewModel.OnStateChanged += async () => await InvokeAsync(StateHasChanged);
+		await viewModel.InitializeAsync();
+	}
+}
+
