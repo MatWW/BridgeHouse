@@ -10,18 +10,18 @@ namespace Backend.Controllers;
 [Route("api/bridge-tables")]
 public class BridgeTableController : ControllerBase
 {
-    private readonly IBridgeTablesService bridgeTablesService;
+    private readonly IBridgeTablesService _bridgeTablesService;
 
     public BridgeTableController(IBridgeTablesService bridgeTablesService)
     {
-        this.bridgeTablesService = bridgeTablesService;
+        _bridgeTablesService = bridgeTablesService;
     }
 
     [Authorize]
     [HttpGet("{bridgeTableId:long}")]
     public async Task<ActionResult<BridgeTable>> GetBridgeTable(int bridgeTableId)
     {
-        BridgeTable table = await bridgeTablesService.GetBridgeTableByIdAsync(bridgeTableId);
+        BridgeTable table = await _bridgeTablesService.GetBridgeTableByIdAsync(bridgeTableId);
 
         return Ok(table);
     }
@@ -30,7 +30,7 @@ public class BridgeTableController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<BridgeTable>> CreateBridgeTable([FromBody] CreateBridgeTableRequestDTO request)
     {
-        BridgeTable createdTable = await bridgeTablesService.CreateBridgeTableAsync(request);
+        BridgeTable createdTable = await _bridgeTablesService.CreateBridgeTableAsync(request);
 
         var url = Url.Action("api/bridge-tables", new { bridgeTableId = createdTable.Id });
 
@@ -44,25 +44,34 @@ public class BridgeTableController : ControllerBase
     {
         Position position = dto.Position;
 
-        await bridgeTablesService.InviteUserToBridgeTableAsync(bridgeTableId, userId, position);
+        await _bridgeTablesService.InviteUserToBridgeTableAsync(bridgeTableId, userId, position);
 
         return Ok();
     }
 
     [Authorize]
-    [HttpPost("{bridgeTableId:long}/invite/{userId}/accept")]
-    public async Task<IActionResult> AcceptInviteToBridgeTable(long bridgeTableId, string userId)
+    [HttpPost("invite/accept/me")]
+    public async Task<IActionResult> AcceptInviteToBridgeTable()
     {
-        await bridgeTablesService.AcceptInviteToBridgeTableAsync(bridgeTableId, userId);
+        await _bridgeTablesService.AcceptInviteToBridgeTableAsync();
 
         return Ok();
     }
 
     [Authorize]
-    [HttpDelete("invite/{userId}/decline")]
-    public async Task<IActionResult> DeclineInviteToBridgeTable(string userId)
+    [HttpDelete("invite/decline/me")]
+    public async Task<IActionResult> DeclineInviteToBridgeTable()
     {
-        await bridgeTablesService.DeclineInviteToBridgeTableAsync(userId);
+        await _bridgeTablesService.DeclineInviteToBridgeTableAsync();
+
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpPatch("{bridgeTableId:long}/leave")]
+    public async Task<IActionResult> LeaveBridgeTable(long bridgeTableId)
+    {
+        await _bridgeTablesService.LeaveTableAsync(bridgeTableId);
 
         return Ok();
     }
@@ -71,7 +80,7 @@ public class BridgeTableController : ControllerBase
     [HttpPatch("{bridgeTableId:long}/remove-user/{userId}")]
     public async Task<ActionResult<BridgeTable>> RemoveUserFromBridgeTable(long bridgeTableId, string userId)
     {
-        await bridgeTablesService.RemoveUserFromBridgeTableAsync(bridgeTableId, userId);
+        await _bridgeTablesService.RemoveUserFromBridgeTableAsync(bridgeTableId, userId);
 
         return Ok();
     }
@@ -80,7 +89,7 @@ public class BridgeTableController : ControllerBase
     [HttpDelete("{bridgeTableId:long}")]
     public async Task<IActionResult> DeleteBridgeTable(long bridgeTableId)
     {
-        await bridgeTablesService.DeleteBridgeTableAsync(bridgeTableId);
+        await _bridgeTablesService.DeleteBridgeTableAsync(bridgeTableId);
 
         return NoContent();
     }

@@ -144,7 +144,7 @@ public class BridgeTablesService : IBridgeTablesService
 
         if (!requestSenderValid && _userService.GetCurrentUserId() != userId)
         {
-            throw new BridgeTableOwnershipException($"User sending request is not owner of bridge table {bridgeTableId}");
+            throw new BridgeTableOwnershipException($"User sending request is neither owner of bridge table: {bridgeTableId} nor user: {userId}");
         }
 
         bool userExists = await _userRepository.UserExistsAsync(userId);
@@ -202,27 +202,35 @@ public class BridgeTablesService : IBridgeTablesService
         await _notificationService.SendInvitationUpdate(userId);
     }
 
-    public async Task AcceptInviteToBridgeTableAsync(long bridgeTableId, string userId)
+    public async Task AcceptInviteToBridgeTableAsync()
     {
+        string userId = _userService.GetCurrentUserId();
+
+        var bridgeTableId = await _redisPlayerStateRepository.GetTableIdOfPlayerInviteAsync(userId);
         Position? position = await _redisPlayerStateRepository.GetPositionOfPlayerInviteAsync(userId);
 
-        if (position is null)
+        if (position is null || bridgeTableId is null)
         {
             throw new InviteNotFoundException($"Valid invite of user with id: {userId} was not found");
         }
 
         await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingInvitedToTableAsync(userId);
 
-        await AddUserToBridgeTableAsync(bridgeTableId, userId, position.Value);
+        await AddUserToBridgeTableAsync(bridgeTableId.Value, userId, position.Value);
     }
 
-    public async Task DeclineInviteToBridgeTableAsync(string userId)
+    public async Task DeclineInviteToBridgeTableAsync()
     {
+        string userId = _userService.GetCurrentUserId();
+
         await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingInvitedToTableAsync(userId);
 
         await _notificationService.SendLeaveTableUpdate(userId);
     }
 
+    public Task LeaveTableAsync(long bridgeTableId) =>
+        RemoveUserFromBridgeTableAsync(bridgeTableId, _userService.GetCurrentUserId());
+    
     public async Task<bool> ValidateBridgeTableOwnershipAsync(long bridgeTableId)
     {
         string requestSenderId = _userService.GetCurrentUserId();
