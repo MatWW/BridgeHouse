@@ -90,6 +90,14 @@ builder.Services.AddExceptionHandler<GameAlreadyStartedExceptionHandler>();
 builder.Services.AddExceptionHandler<GameNotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
+builder.Services.AddExceptionHandler<GamePhaseExceptionHandler>();
+builder.Services.AddExceptionHandler<IllegalBidExceptionHandler>();
+builder.Services.AddExceptionHandler<IllegalCardPlayExceptionHandler>();
+builder.Services.AddExceptionHandler<InviteNotFoundExceptionHandler>();
+builder.Services.AddExceptionHandler<PlayerNotFoundInGameExceptionHandler>();
+builder.Services.AddExceptionHandler<PositionAtTableAlreadyTakenExceptionHandler>();
+builder.Services.AddExceptionHandler<UnauthorizedGameActionExceptionHandler>();
+builder.Services.AddExceptionHandler<UserAlreadyPartOfTheTableExceptionHandler>();
 builder.Services.AddSingleton<Random>();
 
 builder.Services.AddLogging();
