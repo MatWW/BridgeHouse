@@ -40,7 +40,7 @@
 	public List<Card> HeartCards = [];
 	public List<Card> SpadeCards = [];
 
-	protected override void OnInitialized()
+	protected override void OnParametersSet()
 	{
 		ClubCards = Cards.Where(c => c.Suit == CardSuit.CLUB).ToList();
 		DiamondCards = Cards.Where(c => c.Suit == CardSuit.DIAMOND).ToList();
