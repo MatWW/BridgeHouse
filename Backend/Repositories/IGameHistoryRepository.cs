@@ -1,6 +1,6 @@
 ﻿using Backend.Data.Models;
-using Shared;
 using Shared.Enums;
+using Shared.Models;
 
 namespace Backend.Repositories;
 

@@ -1,8 +1,9 @@
 ﻿using Backend.Data.Models;
 using Backend.Repositories;
-using Shared;
 using Shared.Enums;
 using Backend.Exceptions;
+using Shared.DTOs;
+using Shared.Models;
 
 namespace Backend.Services;
 

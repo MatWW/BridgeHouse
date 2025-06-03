@@ -1,5 +1,6 @@
-﻿using Shared;
+﻿using Shared.DTOs;
 using Shared.Enums;
+using Shared.Models;
 
 namespace Frontend.Services.Interfaces;
 

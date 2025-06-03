@@ -1,5 +1,5 @@
-﻿using Shared;
-using Shared.Enums;
+﻿using Shared.Enums;
+using Shared.Models;
 
 namespace Backend.Services;
 

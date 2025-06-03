@@ -1,6 +1,7 @@
 ﻿using Frontend.Services.Interfaces;
-using Shared;
+using Shared.DTOs;
 using Shared.Enums;
+using Shared.Models;
 using System.Net.Http.Json;
 
 namespace Frontend.Services.Implementations;

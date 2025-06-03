@@ -1,7 +1,7 @@
 ﻿using Frontend.Services.Interfaces;
 using Microsoft.AspNetCore.SignalR.Client;
-using Shared;
 using Shared.Enums;
+using Shared.Models;
 
 namespace Frontend.ViewModels;
 

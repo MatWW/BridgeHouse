@@ -1,7 +1,7 @@
 ﻿using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Shared;
+using Shared.Models;
 
 namespace Backend.Controllers
 {

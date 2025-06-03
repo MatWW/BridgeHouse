@@ -1,4 +1,4 @@
-﻿using Shared;
+﻿using Shared.Models;
 using StackExchange.Redis;
 using System.Text.Json;
 using System.Text.Json.Serialization;

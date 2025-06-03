@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Shared;
 using Backend.Data.Models;
+using Shared.Models;
 
 namespace Backend.Services;
 

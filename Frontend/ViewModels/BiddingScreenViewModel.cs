@@ -1,6 +1,6 @@
-﻿using Shared;
-using Shared.Enums;
+﻿using Shared.Enums;
 using Frontend.Services.Interfaces;
+using Shared.Models;
 
 namespace Frontend.ViewModels;
 

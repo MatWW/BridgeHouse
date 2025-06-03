@@ -1,7 +1,7 @@
 ﻿using Backend.Exceptions;
 using Backend.Repositories;
-using Shared;
 using Shared.Enums;
+using Shared.Models;
 
 namespace Backend.Services;
 

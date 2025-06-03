@@ -1,8 +1,8 @@
 ﻿using Backend.Data;
 using Backend.Data.Models;
 using Microsoft.EntityFrameworkCore;
-using Shared;
 using Shared.Enums;
+using Shared.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
