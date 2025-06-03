@@ -1,0 +1,24 @@
+﻿.game-history {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    background-color: antiquewhite;
+    gap: 5vh;
+}
+
+h1 
+{
+    font-weight: bold;
+    font-size: 4vw;
+    color: darkkhaki;
+}
+
+.results 
+{   
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 4vw;
+    row-gap: 1vh;
+    text-align: center;
+}
