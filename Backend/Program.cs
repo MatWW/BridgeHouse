@@ -74,6 +74,9 @@ builder.Services.AddScoped<IRedisPlayerStateRepository, RedisPlayerStateReposito
 builder.Services.AddScoped<IPlayerStateService, PlayerStateService>();
 builder.Services.AddScoped<IGameHistoryRepository, GameHistoryRepository>();
 builder.Services.AddScoped<IGameHistoryService, GameHistoryService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSignalR();
+
 
 builder.Services.AddProblemDetails();
 

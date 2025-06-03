@@ -11,14 +11,16 @@ public class BridgeTablesService : IBridgeTablesService
     private readonly IUserService _userService;
     private readonly IUserRepository _userRepository;
     private readonly IRedisPlayerStateRepository _redisPlayerStateRepository;
+    private readonly INotificationService _notificationService;
 
     public BridgeTablesService(IRedisBridgeTableRepository redisTableRepository, IUserService userService, IUserRepository userRepository,
-        IRedisPlayerStateRepository redisPlayerStateRepository)
+        IRedisPlayerStateRepository redisPlayerStateRepository, INotificationService notificationService)
     {
         _redisBridgeTableRepository = redisTableRepository;
         _userService = userService;
         _userRepository = userRepository;
         _redisPlayerStateRepository = redisPlayerStateRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<List<BridgeTable>> GetAllBridgeTablesAsync()
@@ -62,6 +64,8 @@ public class BridgeTablesService : IBridgeTablesService
 
         await _redisPlayerStateRepository.SaveInformationAboutPlayerBeingPartOfTableAsync(creatorId, createdTable.Id!.Value);
 
+        await _notificationService.SendJoinTableUpdate(creatorId);
+
         return createdTable;
     }
 
@@ -92,6 +96,8 @@ public class BridgeTablesService : IBridgeTablesService
         {
             throw new BridgeTableNotFoundException($"Bridge table with id: {bridgeTableId} was not found");
         }
+
+        await _notificationService.SendDeleteTableUpdate(bridgeTableId);
     }
 
     public async Task AddUserToBridgeTableAsync(long bridgeTableId, string userId, Position position)
@@ -127,6 +133,9 @@ public class BridgeTablesService : IBridgeTablesService
         await _redisBridgeTableRepository.UpdateListOfBridgeTablePlayersAsync(bridgeTableId, players);
 
         await _redisPlayerStateRepository.SaveInformationAboutPlayerBeingPartOfTableAsync(userId, bridgeTableId);
+
+        await _notificationService.SendJoinTableUpdate(userId);
+        await _notificationService.SendTableUpdate(bridgeTableId);
     }
 
     public async Task RemoveUserFromBridgeTableAsync(long bridgeTableId, string userId)
@@ -164,6 +173,9 @@ public class BridgeTablesService : IBridgeTablesService
         await _redisBridgeTableRepository.UpdateListOfBridgeTablePlayersAsync(bridgeTableId, players);
 
         await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingPartOfTableAsync(userId);
+
+        await _notificationService.SendLeaveTableUpdate(userId);
+        await _notificationService.SendTableUpdate(bridgeTableId);
     }
 
     public async Task InviteUserToBridgeTableAsync(long bridgeTableId, string userId, Position position)
@@ -186,6 +198,8 @@ public class BridgeTablesService : IBridgeTablesService
         }
 
         await _redisPlayerStateRepository.SaveInformationAboutPlayerBeingInvitedToTableAsync(userId, bridgeTableId, position);
+
+        await _notificationService.SendInvitationUpdate(userId);
     }
 
     public async Task AcceptInviteToBridgeTableAsync(long bridgeTableId, string userId)
@@ -205,6 +219,8 @@ public class BridgeTablesService : IBridgeTablesService
     public async Task DeclineInviteToBridgeTableAsync(string userId)
     {
         await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingInvitedToTableAsync(userId);
+
+        await _notificationService.SendLeaveTableUpdate(userId);
     }
 
     public async Task<bool> ValidateBridgeTableOwnershipAsync(long bridgeTableId)

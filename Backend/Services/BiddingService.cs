@@ -10,12 +10,15 @@ public class BiddingService : IBiddingService
     private readonly IRedisGameStateRepository _redisGameStateRepository;
     private readonly IUserService _userService;
     private readonly IGameService _gameService;
+    private readonly INotificationService _notificationService;
 
-    public BiddingService(IRedisGameStateRepository redisGameStateRepository, IUserService userService, IGameService gameService)
+    public BiddingService(IRedisGameStateRepository redisGameStateRepository, IUserService userService, IGameService gameService,
+        INotificationService notificationService)
     {
         _redisGameStateRepository = redisGameStateRepository;
         _userService = userService;
         _gameService = gameService;
+        _notificationService = notificationService;
     }
 
     public async Task PlaceBidAsync(long gameId, BidAction bidAction)
@@ -45,7 +48,7 @@ public class BiddingService : IBiddingService
                 return;
             }
 
-            FinalizeBidding(gameState);
+            await FinalizeBidding(gameState);
         }
         else
         {
@@ -53,6 +56,8 @@ public class BiddingService : IBiddingService
         }
 
         await _redisGameStateRepository.SaveGameStateAsync(gameState);
+
+        await _notificationService.SendBidUpdate(gameState.TableId);
     }
 
     private async Task<GameState> LoadAndValidateGameState(long gameId)
@@ -192,7 +197,7 @@ public class BiddingService : IBiddingService
         return gameState.Players.First(p => p.Position == dummyPosition);
     }
 
-    private static void FinalizeBidding(GameState gameState)
+    private async Task FinalizeBidding(GameState gameState)
     { 
         var suit = gameState.BiddingState.Contract!.BidAction.Bid.Suit;
         var declarer = gameState.BiddingState.BidActions
@@ -202,5 +207,7 @@ public class BiddingService : IBiddingService
         gameState.PlayingState.Declarer = declarer;
         gameState.PlayingState.Dummy = GetDummy(gameState, declarer);
         gameState.GamePhase = GamePhase.PLAYING;
+
+        await _notificationService.SendEndOfBiddingUpdate(gameState.TableId);
     }
 }

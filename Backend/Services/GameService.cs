@@ -14,10 +14,12 @@ public class GameService : IGameService
     private readonly IUserService _userService;
     private readonly IRedisPlayerStateRepository _redisPlayerStateRepository;
     private readonly IGameHistoryService _gameHistoryService;
+    private readonly INotificationService _notificationService;
 
     public GameService(IRedisGameStateRepository redisGameStateRepository, IDeckService deckService, Random rnd, 
         IRedisBridgeTableRepository redisBridgeTableRepository, IUserService userService,
-        IRedisPlayerStateRepository redisPlayerStateRepository, IGameHistoryService gameHistoryService)
+        IRedisPlayerStateRepository redisPlayerStateRepository, IGameHistoryService gameHistoryService,
+        INotificationService notificationService)
     {
         _redisGameStateRepository = redisGameStateRepository;
         _deckService = deckService;
@@ -26,6 +28,7 @@ public class GameService : IGameService
         _userService = userService;
         _redisPlayerStateRepository = redisPlayerStateRepository;
         _gameHistoryService = gameHistoryService;
+        _notificationService = notificationService;
     }
 
     public async Task StartGameAsync(long tableId, List<Player> players)
@@ -50,6 +53,8 @@ public class GameService : IGameService
         long gameId = await _redisGameStateRepository.SaveGameStateAsync(gameState);
 
         await AddInformationAboutPlayersBeingInGameAsync(players, gameId);
+
+        await _notificationService.SendStartOfGameUpdate(tableId);
     }
 
     public async Task<GameState> GetGameStateAsync(long gameId)
@@ -103,16 +108,11 @@ public class GameService : IGameService
             ?? throw new PlayerNotFoundInGameException($"Player with id: {playerId} was not found in game with id: {gameId}");
     }
 
-    public async Task<List<Card>> GetPlayerCardsAsync(long gameId, string playerId)
+    public async Task<List<Card>> GetSignedInPlayerCardsAsync(long gameId)
     {
         var gameState = await GetGameStateAsync(gameId);
 
-        string requestSenderId = _userService.GetCurrentUserId();
-
-        if (playerId != requestSenderId)
-        {
-            throw new UnauthorizedAccessException($"Request sender user id does not match playerId: {playerId}");
-        }
+        string playerId = _userService.GetCurrentUserId();
 
         return gameState.PlayerHands[playerId];
     }
@@ -161,6 +161,8 @@ public class GameService : IGameService
         }
 
         await _gameHistoryService.SaveGameAsync(gameState);
+
+        await _notificationService.SendEndOfGameUpdate(gameState.TableId);
     }
 
     private async Task ValidateTableOwnershipAsync(long tableId)

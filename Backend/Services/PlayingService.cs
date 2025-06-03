@@ -11,12 +11,15 @@ public class PlayingService : IPlayingService
     private readonly IRedisGameStateRepository _redisGameStateRepository;
     private readonly IUserService _userService;
     private readonly IGameService _gameService;
+    private readonly INotificationService _notificationService;
 
-    public PlayingService(IRedisGameStateRepository redisGameStateRepository, IUserService userService, IGameService gameService)
+    public PlayingService(IRedisGameStateRepository redisGameStateRepository, IUserService userService, IGameService gameService
+        , INotificationService notificationService)
     {
         _redisGameStateRepository = redisGameStateRepository;
         _userService = userService;
         _gameService = gameService;
+        _notificationService = notificationService;
     }
 
     public async Task PlayCardAsync(long gameId, CardPlayAction cardPlayAction)
@@ -34,6 +37,8 @@ public class PlayingService : IPlayingService
         ApplyCardPlay(gameState, cardPlayAction);
 
         await _redisGameStateRepository.SaveGameStateAsync(gameState);
+
+        await _notificationService.SendCardPlayUpdate(gameState.TableId);
 
         if (AllTricksPlayed(gameState.PlayingState))
         {

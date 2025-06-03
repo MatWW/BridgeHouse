@@ -3,18 +3,8 @@
 namespace Backend.Hubs;
 public class BridgeHub : Hub
 {
-    public async Task SendBidUpdate()
+    public async Task JoinTable(string tableId)
     {
-        await Clients.All.SendAsync("ReceiveBidUpdate");
-    }
-
-    public async Task SendCardPlayUpdate()
-    {
-        await Clients.All.SendAsync("ReceiveCardPlayUpdate");
-    }
-
-    public async Task SendGamePhaseUpdate()
-    {
-        await Clients.All.SendAsync("ReceiveGamePhaseUpdate");
+        await Groups.AddToGroupAsync(Context.ConnectionId, tableId);
     }
 }
