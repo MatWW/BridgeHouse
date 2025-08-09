@@ -13,6 +13,7 @@ Fullstack project that is platform for real-time multiplayer bridge playing. It 
 - .NET
 - Entity Framework
 - SignalR
+- Redis
 - Blazor
 - Docker
 
