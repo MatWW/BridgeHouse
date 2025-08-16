@@ -12,7 +12,7 @@ public interface IBridgeTablesService
     public Task AddUserToBridgeTableAsync(long bridgeTableId, string userId, Position position);
     public Task RemoveUserFromBridgeTableAsync(long bridgeTableId, string userId);
     public Task InviteUserToBridgeTableAsync(long bridgeTableId, string userId, Position position);
-    public Task AcceptInviteToBridgeTableAsync();
+    public Task AcceptInviteToBridgeTableAsync(string status);
     public Task DeclineInviteToBridgeTableAsync();
     Task LeaveTableAsync(long bridgeTableId);
     public Task DeleteBridgeTableAsync(long bridgeTableId);

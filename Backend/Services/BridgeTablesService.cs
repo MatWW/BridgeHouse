@@ -203,7 +203,7 @@ public class BridgeTablesService : IBridgeTablesService
         await _notificationService.SendInvitationUpdate(userId);
     }
 
-    public async Task AcceptInviteToBridgeTableAsync()
+    public async Task AcceptInviteToBridgeTableAsync(string status)
     {
         string userId = _userService.GetCurrentUserId();
 
@@ -213,6 +213,11 @@ public class BridgeTablesService : IBridgeTablesService
         if (position is null || bridgeTableId is null)
         {
             throw new InviteNotFoundException($"Valid invite of user with id: {userId} was not found");
+        }
+
+        if (status != "ACCEPTED")
+        {
+            throw new ArgumentException("New invitation status is not equal to ACCEPTED");
         }
 
         await _redisPlayerStateRepository.DeleteInformationAboutPlayerBeingInvitedToTableAsync(userId);
