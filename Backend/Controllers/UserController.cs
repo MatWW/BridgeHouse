@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs;
+using Shared.Models;
 
 namespace Backend.Controllers;
 
@@ -12,12 +13,15 @@ public class UserController : ControllerBase
     private readonly IUserService _userService;
     private readonly IUserStateService _userStateService;
     private readonly IBridgeTablesService _bridgeTablesService;
+    private readonly IGameService _gameService;
 
-    public UserController(IUserService userService, IUserStateService userStateService, IBridgeTablesService bridgeTablesService)
+    public UserController(IUserService userService, IUserStateService userStateService,
+        IBridgeTablesService bridgeTablesService, IGameService gameService)
     {
         _userService = userService;
         _userStateService = userStateService;
         _bridgeTablesService = bridgeTablesService;
+        _gameService = gameService;
     }
 
     [Authorize]
@@ -61,5 +65,14 @@ public class UserController : ControllerBase
         await _bridgeTablesService.DeclineInviteToBridgeTableAsync();
 
         return Ok();
+    }
+
+    [Authorize]
+    [HttpGet("me/game-info")]
+    public async Task<ActionResult<Player>> GetSignedInPlayerInfo()
+    {
+        var playerInfo = await _gameService.GetSignedInPlayerInfoAsync();
+
+        return Ok(playerInfo);
     }
 }
