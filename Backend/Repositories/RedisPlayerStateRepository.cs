@@ -59,9 +59,8 @@ public class RedisPlayerStateRepository : IRedisPlayerStateRepository
         await _redisDb.KeyDeleteAsync(TableKey(playerId));
 
     public Task DeleteInformationAboutPlayerBeingInGameAsync(string playerId) =>
-       _redisDb.KeyDeleteAsync($"player:{playerId}:game");
-    
-
+       _redisDb.KeyDeleteAsync(GameKey(playerId));
+  
     private async Task<string?> GetHashValueAsync(string key, string field)
     {
         var value = await _redisDb.HashGetAsync(key, field);

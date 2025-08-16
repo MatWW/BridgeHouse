@@ -1,6 +1,7 @@
 ﻿using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Models;
 
 namespace Backend.Controllers;
 
@@ -9,10 +10,12 @@ namespace Backend.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IUserStateService _userStateService;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IUserStateService userStateService)
     {
         _userService = userService;
+        _userStateService = userStateService;
     }
 
     [Authorize]
@@ -32,4 +35,11 @@ public class UserController : ControllerBase
         return Ok(id);
     }
 
+    [HttpGet("me/state")]
+    public async Task<ActionResult<UserStateDTO>> GetUserState()
+    {
+        UserStateDTO userState = await _userStateService.GetUserStateAsync();
+        
+        return Ok(userState);
+    }
 }
