@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs;
-using Shared.Enums;
 using Shared.Models;
 
 namespace Backend.Controllers;
@@ -19,10 +18,10 @@ public class BridgeTableController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("{bridgeTableId:long}")]
-    public async Task<ActionResult<BridgeTable>> GetBridgeTable(int bridgeTableId)
+    [HttpGet("{id:long}")]
+    public async Task<ActionResult<BridgeTable>> GetBridgeTable(int id)
     {
-        BridgeTable table = await _bridgeTablesService.GetBridgeTableByIdAsync(bridgeTableId);
+        BridgeTable table = await _bridgeTablesService.GetBridgeTableByIdAsync(id);
 
         return Ok(table);
     }
@@ -48,28 +47,19 @@ public class BridgeTableController : ControllerBase
     }
 
     [Authorize]
-    [HttpPatch("{bridgeTableId:long}/leave")]
-    public async Task<IActionResult> LeaveBridgeTable(long bridgeTableId)
+    [HttpDelete("{id:long}/users/me")]
+    public async Task<IActionResult> LeaveBridgeTable(long id)
     {
-        await _bridgeTablesService.LeaveTableAsync(bridgeTableId);
+        await _bridgeTablesService.LeaveTableAsync(id);
 
         return Ok();
     }
 
     [Authorize]
-    [HttpPatch("{bridgeTableId:long}/remove-user/{userId}")]
-    public async Task<ActionResult<BridgeTable>> RemoveUserFromBridgeTable(long bridgeTableId, string userId)
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> DeleteBridgeTable(long id)
     {
-        await _bridgeTablesService.RemoveUserFromBridgeTableAsync(bridgeTableId, userId);
-
-        return Ok();
-    }
-
-    [Authorize]
-    [HttpDelete("{bridgeTableId:long}")]
-    public async Task<IActionResult> DeleteBridgeTable(long bridgeTableId)
-    {
-        await _bridgeTablesService.DeleteBridgeTableAsync(bridgeTableId);
+        await _bridgeTablesService.DeleteBridgeTableAsync(id);
 
         return NoContent();
     }
