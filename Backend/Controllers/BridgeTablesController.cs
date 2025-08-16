@@ -39,31 +39,10 @@ public class BridgeTableController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("{bridgeTableId:long}/invite/{userId}")]
-    public async Task<IActionResult> InviteUserToBridgeTable(long bridgeTableId, string userId,
-        [FromBody] InvitePlayerToTableDTO dto)
+    [HttpPost("{id:long}/invitations")]
+    public async Task<IActionResult> InviteUserToBridgeTable(long id, [FromBody] CreateInvitationDTO dto)
     {
-        Position position = dto.Position;
-
-        await _bridgeTablesService.InviteUserToBridgeTableAsync(bridgeTableId, userId, position);
-
-        return Ok();
-    }
-
-    [Authorize]
-    [HttpPost("invite/accept/me")]
-    public async Task<IActionResult> AcceptInviteToBridgeTable()
-    {
-        await _bridgeTablesService.AcceptInviteToBridgeTableAsync();
-
-        return Ok();
-    }
-
-    [Authorize]
-    [HttpDelete("invite/decline/me")]
-    public async Task<IActionResult> DeclineInviteToBridgeTable()
-    {
-        await _bridgeTablesService.DeclineInviteToBridgeTableAsync();
+        await _bridgeTablesService.InviteUserToBridgeTableAsync(id, dto.UserId, dto.Position!.Value);
 
         return Ok();
     }

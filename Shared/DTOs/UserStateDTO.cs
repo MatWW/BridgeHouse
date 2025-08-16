@@ -1,6 +1,7 @@
 ﻿using Shared.Enums;
+using Shared.Models;
 
-namespace Shared.Models;
+namespace Shared.DTOs;
 
 public class UserStateDTO
 {

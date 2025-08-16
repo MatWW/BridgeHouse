@@ -1,7 +1,7 @@
 ﻿using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Models;
+using Shared.DTOs;
 
 namespace Backend.Controllers;
 
@@ -11,11 +11,13 @@ public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IUserStateService _userStateService;
+    private readonly IBridgeTablesService _bridgeTablesService;
 
-    public UserController(IUserService userService, IUserStateService userStateService)
+    public UserController(IUserService userService, IUserStateService userStateService, IBridgeTablesService bridgeTablesService)
     {
         _userService = userService;
         _userStateService = userStateService;
+        _bridgeTablesService = bridgeTablesService;
     }
 
     [Authorize]
@@ -41,5 +43,23 @@ public class UserController : ControllerBase
         UserStateDTO userState = await _userStateService.GetUserStateAsync();
         
         return Ok(userState);
+    }
+
+    [Authorize]
+    [HttpPatch("me/invitation")]
+    public async Task<IActionResult> AcceptInvitationToBridgeTable([FromBody] AcceptInvitationDTO dto)
+    {
+        await _bridgeTablesService.AcceptInviteToBridgeTableAsync(dto.InvitationSataus);
+
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpDelete("me/invitation")]
+    public async Task<IActionResult> DeclineInvitationToBridgeTable()
+    {
+        await _bridgeTablesService.DeclineInviteToBridgeTableAsync();
+
+        return Ok();
     }
 }
