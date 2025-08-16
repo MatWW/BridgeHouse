@@ -71,7 +71,7 @@ builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IBiddingService, BiddingService>();
 builder.Services.AddScoped<IPlayingService, PlayingService>();
 builder.Services.AddScoped<IRedisPlayerStateRepository, RedisPlayerStateRepository>();
-builder.Services.AddScoped<IPlayerStateService, PlayerStateService>();
+builder.Services.AddScoped<IUserStateService, UserStateService>();
 builder.Services.AddScoped<IGameHistoryRepository, GameHistoryRepository>();
 builder.Services.AddScoped<IGameHistoryService, GameHistoryService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
