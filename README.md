@@ -30,36 +30,29 @@ API provides following endpoints:
 - POST /api/authentication/login
 - POST /api/authentication/logout
 
-- GET /api/bridge-tables/{bridgeTableId}
+- GET /api/bridge-tables/{id}
 - POST /api/bridge-tables
-- POST /api/bridge-tables/{bridgeTableId}/invite/{userId}
-- POST /api/bridge-tables/invite/accept/me
-- PATCH /api/bridge-tables/{bridgeTableId}/remove-user/{userId}
-- PATCH /api/bridge-tables/{bridgeTableId}/leave
-- DELETE /api/bridge-tables/{bridgeTableId}
-- DELETE /api/bridge-tables/invite/decline/me
+- DELETE /api/bridge-tables/{id}
+- POST /api/bridge-tables/{id}/invitations
+- DELETE /api/bridge-tables/{id}/invitations
 
-- GET /api/game/{gameId}/biddingState
-- GET /api/game/{gameId}/playingState
-- GET /api/game/{gameId}/contract
-- GET /api/game/{gameId}/cards/me
-- GET /api/game/{gameId}/cards/dummy
-- GET /api/game/{gameId}/playerInfo/current
-- GET /api/game/{gameId}/playerInfo/me
-- GET /api/game/{gameId}/phase
-- POST /api/game/startGame
-- POST /api/game/{gameId}/bid
-- POST /api/game/{gameId}/bid
+- GET /api/games/{id}/bidding-state
+- GET /api/games/{id}/playing-state
+- GET /api/games/{id}/cards
+- GET /api/games/{id}/current-player
+- GET /api/games/{id}/phase
+- GET /api/games/{id}/contract
+- POST /api/games
+- POST /api/games/{id}/bids
+- POST /api/games/{id}/card-plays
 
-- GET /api/game-history/{gameId}
-- GET /api/game-history/short-info/me
-
-- GET /api/player-state/invite/me
-- GET /api/player-state/table/me
-- GET /api/player-state/game/me
-
-- GET /api/users/id/me
-- GET /api/users/id/{nickname}
+- GET /api/users/me/id
+- GET /api/users/id
+- GET /api/users/me/state
+- PATCH /api/users/me/invitation
+- DELETE /api/users/me/invitation
+- GET /api/users/me/game-info
+- GET /api/users/me/game-histories/short-info
 
 Endpoints can also be seen at: https://localhost:7200/swagger/index.html
 
