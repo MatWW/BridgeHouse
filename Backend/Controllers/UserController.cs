@@ -14,18 +14,21 @@ public class UserController : ControllerBase
     private readonly IUserStateService _userStateService;
     private readonly IBridgeTablesService _bridgeTablesService;
     private readonly IGameService _gameService;
+    private readonly IGameHistoryService _gameHistoryService;
 
     public UserController(IUserService userService, IUserStateService userStateService,
-        IBridgeTablesService bridgeTablesService, IGameService gameService)
+        IBridgeTablesService bridgeTablesService, IGameService gameService,
+        IGameHistoryService gameHistoryService)
     {
         _userService = userService;
         _userStateService = userStateService;
         _bridgeTablesService = bridgeTablesService;
         _gameService = gameService;
+        _gameHistoryService = gameHistoryService;
     }
 
     [Authorize]
-    [HttpGet("id/me")]
+    [HttpGet("me/id")]
     public ActionResult<string> GetSignedInUserId()
     {
         string id = _userService.GetCurrentUserId();
@@ -33,8 +36,8 @@ public class UserController : ControllerBase
         return Ok(id);
     }
 
-    [HttpGet("id/{nickname}")]
-    public async Task<ActionResult<string>> GetIdByNickname(string nickname)
+    [HttpGet("id")]
+    public async Task<ActionResult<string>> GetIdByNickname([FromQuery] string nickname)
     {
         string id = await _userService.GetUserIdByNicknameAsync(nickname);
 
@@ -74,5 +77,14 @@ public class UserController : ControllerBase
         var playerInfo = await _gameService.GetSignedInPlayerInfoAsync();
 
         return Ok(playerInfo);
+    }
+
+    [Authorize]
+    [HttpGet("me/game-histories/short-info")]
+    public async Task<ActionResult<List<PlayerGameShortInfoDTO>>> GetUserGamesShortInfo()
+    {
+        var shortInfos = await _gameHistoryService.GetSignedInUserGamesShortInfoAsync();
+
+        return Ok(shortInfos);
     }
 }
