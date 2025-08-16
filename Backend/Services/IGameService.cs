@@ -10,11 +10,10 @@ public interface IGameService
     Task<BiddingState> GetBiddingStateAsync(long gameId);
     Task<PlayingState> GetPlayingStateAsync(long gameId); 
     Task<Contract?> GetContractAsync(long gameId);
-    Task<List<Card>> GetSignedInPlayerCardsAsync(long gameId);
-    Task<List<Card>> GetDummiesCardsAsync(long gameId);
+    Task<List<Card>> GetPlayerCardsAsync(long gameId, string player);
     Task<Player> GetInfoAboutPlayerInGameAsync(string playerId, long gameId);
     Task<Player> GetCurrentPlayerInfoAsync(long gameId);
-    Task<Player> GetSignedInPlayerInfoAsync(long gameId);
+    Task<Player> GetSignedInPlayerInfoAsync();
     Task<GamePhase> GetGamePhaseAsync(long gameId);
     Task EndGameAsync(long gameId);
 }

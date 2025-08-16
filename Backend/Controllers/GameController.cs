@@ -8,7 +8,7 @@ using Shared.Models;
 namespace Backend.Controllers;
 
 [ApiController]
-[Route("api/game")]
+[Route("api/games")]
 public class GameController : ControllerBase
 {
     private readonly IGameService _gameService;
@@ -23,79 +23,61 @@ public class GameController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("{gameId:long}/biddingState")]
-    public async Task<ActionResult<BiddingState>> GetBiddingState(long gameId)
+    [HttpGet("{id:long}/bidding-state")]
+    public async Task<ActionResult<BiddingState>> GetBiddingState(long id)
     {
-        var biddingState = await _gameService.GetBiddingStateAsync(gameId);
+        var biddingState = await _gameService.GetBiddingStateAsync(id);
 
         return Ok(biddingState);
     }
 
     [Authorize]
-    [HttpGet("{gameId:long}/playingState")]
-    public async Task<ActionResult<PlayingState>> GetPlayingState(long gameId)
+    [HttpGet("{id:long}/playing-state")]
+    public async Task<ActionResult<PlayingState>> GetPlayingState(long id)
     {
-        var playingState = await _gameService.GetPlayingStateAsync(gameId);
+        var playingState = await _gameService.GetPlayingStateAsync(id);
 
         return Ok(playingState);
     }
 
     [Authorize]
-    [HttpGet("{gameId:long}/contract")]
-    public async Task<ActionResult<Contract>> GetContractAsync(long gameId)
+    [HttpGet("{id:long}/contract")]
+    public async Task<ActionResult<Contract>> GetContractAsync(long id)
     {
-        var contract = await _gameService.GetContractAsync(gameId);
+        var contract = await _gameService.GetContractAsync(id);
 
         return Ok(contract);
     }
 
     [Authorize]
-    [HttpGet("{gameId:long}/cards/me")]
-    public async Task<ActionResult<List<Card>>> GetPlayerCards(long gameId)
+    [HttpGet("{id:long}/cards")]
+    public async Task<ActionResult<List<Card>>> GetCards(long id, [FromQuery] string player)
     {
-        var playerCards = await _gameService.GetSignedInPlayerCardsAsync(gameId);
+        var playerCards = await _gameService.GetPlayerCardsAsync(id, player);
 
         return Ok(playerCards);
     }
 
     [Authorize]
-    [HttpGet("{gameId:long}/cards/dummy")]
-    public async Task<ActionResult<List<Card>>> GetDummiesCards(long gameId)
+    [HttpGet("{id:long}/current-player")]
+    public async Task<ActionResult<Player>> GetCurrentPlayerInfo(long id)
     {
-        var dummiesCards = await _gameService.GetDummiesCardsAsync(gameId);
-
-        return Ok(dummiesCards);
-    }
-
-    [Authorize]
-    [HttpGet("{gameId:long}/playerInfo/current")]
-    public async Task<ActionResult<Player>> GetCurrentPlayerInfo(long gameId)
-    {
-        var playerInfo = await _gameService.GetCurrentPlayerInfoAsync(gameId);
+        var playerInfo = await _gameService.GetCurrentPlayerInfoAsync(id);
 
         return Ok(playerInfo);
     }
 
     [Authorize]
-    [HttpGet("{gameId:long}/playerInfo/me")]
-    public async Task<ActionResult<Player>> GetSignedInPlayerInfo(long gameId)
+    [HttpGet("{id:long}/phase")]
+    public async Task<ActionResult<GamePhase>> GetGamePhase(long id)
     {
-        var playerInfo = await _gameService.GetSignedInPlayerInfoAsync(gameId);
-
-        return Ok(playerInfo);
-    }
-
-    [Authorize]
-    [HttpGet("{gameId:long}/phase")]
-    public async Task<ActionResult<GamePhase>> GetGamePhase(long gameId)
-    {
-        var gamePhase = await _gameService.GetGamePhaseAsync(gameId);
+        var gamePhase = await _gameService.GetGamePhaseAsync(id);
 
         return gamePhase;
     }
 
     [Authorize]
-    [HttpPost("startGame")]
+    [HttpPost]
     public async Task<IActionResult> StartGame([FromBody] StartGameRequestDTO dto)
     {
         await _gameService.StartGameAsync(dto.tableId, dto.players);
@@ -104,19 +86,19 @@ public class GameController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("{gameId:long}/bid")]
-    public async Task<IActionResult> PlaceBid(long gameId, [FromBody] BidAction bidAction)
+    [HttpPost("{id:long}/bids")]
+    public async Task<IActionResult> PlaceBid(long id, [FromBody] BidAction bidAction)
     {
-        await _biddingService.PlaceBidAsync(gameId, bidAction);
+        await _biddingService.PlaceBidAsync(id, bidAction);
 
         return Ok();
     }
 
     [Authorize]
-    [HttpPost("{gameId:long}/playCard")]
-    public async Task<IActionResult> PlayCard(long gameId, [FromBody] CardPlayAction cardPlayAction)
+    [HttpPost("{id:long}/card-plays")]
+    public async Task<IActionResult> PlayCard(long id, [FromBody] CardPlayAction cardPlayAction)
     {
-        await _playingService.PlayCardAsync(gameId, cardPlayAction);
+        await _playingService.PlayCardAsync(id, cardPlayAction);
 
         return Ok();
     }
