@@ -86,9 +86,11 @@ public class GameService : IGameService
         return gameState.BiddingState.Contract;
     }
 
-    public async Task<Player> GetSignedInPlayerInfoAsync(long gameId)
-    {
+    public async Task<Player> GetSignedInPlayerInfoAsync()
+    { 
         string userId = _userService.GetCurrentUserId();
+        long gameId = await _redisPlayerStateRepository.GetGameIdOfPlayerAsync(userId)
+            ?? throw new InvalidOperationException("Signed in user is not in game");
 
         var playerInfo = await GetInfoAboutPlayerInGameAsync(userId, gameId);
 
@@ -108,7 +110,14 @@ public class GameService : IGameService
             ?? throw new PlayerNotFoundInGameException($"Player with id: {playerId} was not found in game with id: {gameId}");
     }
 
-    public async Task<List<Card>> GetSignedInPlayerCardsAsync(long gameId)
+    public Task<List<Card>> GetPlayerCardsAsync(long gameId, string player)
+    {
+        if (player == "me") return GetSignedInPlayerCardsAsync(gameId);
+        else if (player == "dummy") return GetDummiesCardsAsync(gameId);
+        else throw new ArgumentException("Valid player query param was not given.");
+    }
+
+    private async Task<List<Card>> GetSignedInPlayerCardsAsync(long gameId)
     {
         var gameState = await GetGameStateAsync(gameId);
 
@@ -117,7 +126,7 @@ public class GameService : IGameService
         return gameState.PlayerHands[playerId];
     }
 
-    public async Task<List<Card>> GetDummiesCardsAsync(long gameId)
+    private async Task<List<Card>> GetDummiesCardsAsync(long gameId)
     {
         var gameState = await GetGameStateAsync(gameId);
 
