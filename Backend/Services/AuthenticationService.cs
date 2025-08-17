@@ -1,48 +1,63 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Backend.Data.Models;
-using Shared.Models;
+﻿using Backend.Data.Models;
+using Backend.Exceptions;
+using Backend.Repositories;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using Shared.DTOs;
+using System.Security.Authentication;
 
 namespace Backend.Services;
 
-public class AuthenticationService : IAuthenticationService
+public class AuthenticationService(
+    IUserRepository userRepository,
+    IJwtService jwtService,
+    IPasswordHasher<User> passwordHasher
+    ) : IAuthenticationService
 {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly SignInManager<AppUser> _signInManager;
-
-    public AuthenticationService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
+    public async Task<AuthenticationResponse> RegisterUserAsync(RegisterRequestDTO request)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
-    }
-
-    public async Task<IdentityResult> RegisterUserAsync(RegistrationModel registrationModel)
-    {
-        var user = new AppUser
+        var user = new User
         {
-            Email = registrationModel.Email,
-            UserName = registrationModel.Email,
-            Nickname = registrationModel.Nickname
+            Email = request.Email,
+            Nickname = request.Nickname,
         };
 
-        var result = await _userManager.CreateAsync(user, registrationModel.Password);
+        user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
 
-        if (result.Succeeded)
-        {
-            await _signInManager.SignInAsync(user, isPersistent: true);
-        }
+        await userRepository.SaveAsync(user);
 
-        return result;
+        string accessToken = jwtService.GenerateAccessToken(user);
+        string refreshToken = jwtService.GenerateRefreshToken(user); 
+
+        return new AuthenticationResponse {  AccessToken = accessToken, RefreshToken = refreshToken };
     }
 
-    public async Task<SignInResult> LoginUserAsync(LoginModel loginModel)
+    public async Task<AuthenticationResponse> AuthenticateUserAsync(LoginRequestDTO request)
     {
-        var result = await _signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, isPersistent: true, lockoutOnFailure: false);
+        var user = await userRepository.FindByEmailAsync(request.Email)
+            ?? throw new UserNotFoundException("user with email " + request.Email + " was not found");
 
-        return result;
+        var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
+        if (result != PasswordVerificationResult.Success)
+            throw new InvalidCredentialException("invalid password");
+
+        string accessToken = jwtService.GenerateAccessToken(user);
+        string refreshToken = jwtService.GenerateRefreshToken(user);
+
+        return new AuthenticationResponse { AccessToken = accessToken, RefreshToken = refreshToken };
     }
-
-    public async Task LogoutUserAsync()
+    
+    public async Task<string> RefreshTokenAsync(string refreshToken)
     {
-        await _signInManager.SignOutAsync();
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            throw new SecurityTokenException("Token was not provided");
+
+        string email = jwtService.ExtractEmail(refreshToken);
+        var user = await userRepository.FindByEmailAsync(email)
+            ?? throw new UserNotFoundException(email);
+
+        string accessToken = jwtService.GenerateAccessToken(user);
+
+        return accessToken;
     }
 }

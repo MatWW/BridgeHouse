@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Shared.Models;
+﻿using Backend.Data.Models;
+using Shared.DTOs;
 
 namespace Backend.Services;
 
 public interface IAuthenticationService
 {
-    Task<IdentityResult> RegisterUserAsync(RegistrationModel registrationModel);
-    Task<SignInResult> LoginUserAsync(LoginModel loginModel);
-    Task LogoutUserAsync();
+    Task<AuthenticationResponse> RegisterUserAsync(RegisterRequestDTO request);
+    Task<AuthenticationResponse> AuthenticateUserAsync(LoginRequestDTO request);
+    Task<string> RefreshTokenAsync(string refreshToken);
 }
