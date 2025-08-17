@@ -1,45 +1,65 @@
 ﻿using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Models;
+using Shared.DTOs;
 
 namespace Backend.Controllers
 {
     [ApiController]
-    [Route("api/authentication")]
-    public class AuthenticationController : ControllerBase
+    [Route("api/auth")]
+    public class AuthenticationController(IAuthenticationService authenticationService) : ControllerBase
     {
-        private readonly IAuthenticationService _authenticationService;
-
-        public AuthenticationController(IAuthenticationService authenticationService)
+        private static CookieOptions BuildCookieOptions(int minutes) => new()
         {
-            _authenticationService = authenticationService;
-        }
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(minutes)
+        };
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegistrationModel registrationModel)
+        public async Task<IActionResult> Register([FromBody] RegisterRequestDTO dto)
         {
-            var result = await _authenticationService.RegisterUserAsync(registrationModel);
+            var tokens = await authenticationService.RegisterUserAsync(dto);
 
-            return result.Succeeded ? CreatedAtAction(nameof(Register), new { email = registrationModel.Email }, null) 
-                : BadRequest(result.Errors);
+            Response.Cookies.Append("access-token", tokens.AccessToken, BuildCookieOptions(1));
+            Response.Cookies.Append("refresh-token", tokens.RefreshToken, BuildCookieOptions(10080));
+
+            return CreatedAtAction(nameof(Register), dto.Email);
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
+        [HttpPost("authenticate")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO dto)
         {
-            var result = await _authenticationService.LoginUserAsync(loginModel);
+            var tokens = await authenticationService.AuthenticateUserAsync(dto);
 
-            return result.Succeeded ? Ok("Login Successful") : Unauthorized("Invalid credentials");
+            Response.Cookies.Append("access-token", tokens.AccessToken, BuildCookieOptions(1));
+            Response.Cookies.Append("refresh-token", tokens.RefreshToken, BuildCookieOptions(10080));
+
+            return Ok(new {dto.Email});
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            if (!Request.Cookies.TryGetValue("refresh-token", out var refreshToken) || string.IsNullOrWhiteSpace(refreshToken))
+                return Unauthorized("Refresh token missing.");
+
+            var accessToken = await authenticationService.RefreshTokenAsync(refreshToken);
+
+            Response.Cookies.Append("access-token", accessToken, BuildCookieOptions(1));
+
+            return Ok();
         }
 
         [Authorize]
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public IActionResult Logout()
         {
-            await _authenticationService.LogoutUserAsync();
-
-            return Ok("User logged out successfully");
+            Response.Cookies.Delete("access-token");
+            Response.Cookies.Delete("refresh-token");
+            
+            return NoContent();
         }
     }
 }
