@@ -1,4 +1,5 @@
 ﻿using Backend.Data;
+using Backend.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Repositories;
@@ -29,4 +30,13 @@ public class UserRepository : IUserRepository
             .Select(u => u.Id)
             .FirstOrDefaultAsync();
 
+    public Task<User?> FindByEmailAsync(string email) =>
+        _appDbContext.Users
+            .FirstOrDefaultAsync(u => u.Email == email);
+
+    public async Task SaveAsync(User user)
+    {
+        await _appDbContext.Users.AddAsync(user);
+        await _appDbContext.SaveChangesAsync();
+    }
 }
