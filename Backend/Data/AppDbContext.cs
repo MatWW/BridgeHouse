@@ -1,13 +1,13 @@
 ﻿using Backend.Data.Models;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Data;
 
-public class AppDbContext : IdentityDbContext<AppUser>
+public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-    
+
+    public DbSet<User> Users { get; set; }
     public DbSet<GameHistory> GameHistory { get; set; }
     public DbSet<UserGames> UserGames { get; set; }
 
