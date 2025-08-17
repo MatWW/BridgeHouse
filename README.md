@@ -6,7 +6,7 @@ Although this repository contains frontend, currently it is not finished, theref
 ## :star: Overview
 
 Backend for real-time multiplayer bridge playing platform, that provides REST API for following functionalities:
-- registration, login, logout
+- JWT auth: registration, login, logout
 - creating and deleting game tables
 - inviting users to a table, accepting/declining invites, leaving table
 - playing full game of bridge (pacing bid, playing cards etc.)
