@@ -1,8 +1,0 @@
-﻿.card-hand {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    padding: 10px;
-    flex-wrap: nowrap; 
-    justify-content: center;
-}
