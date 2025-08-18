@@ -91,24 +91,7 @@ builder.Services.AddSignalR();
 
 builder.Services.AddProblemDetails();
 
-builder.Services.AddExceptionHandler<UserNotFoundExceptionHandler>();
-builder.Services.AddExceptionHandler<BridgeTableNotFoundExceptionHandler>();
-builder.Services.AddExceptionHandler<BridgeTableOwnershipExceptionHandler>();
-builder.Services.AddExceptionHandler<AddPlayerConflictExceptionHandler>();
-builder.Services.AddExceptionHandler<PlayerNotFoundAtBridgeTableExceptionHandler>();
-builder.Services.AddExceptionHandler<PlayersListNotValidExceptionHandler>();
-builder.Services.AddExceptionHandler<GameAlreadyStartedExceptionHandler>();
-builder.Services.AddExceptionHandler<GameNotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
-builder.Services.AddExceptionHandler<GamePhaseExceptionHandler>();
-builder.Services.AddExceptionHandler<IllegalBidExceptionHandler>();
-builder.Services.AddExceptionHandler<IllegalCardPlayExceptionHandler>();
-builder.Services.AddExceptionHandler<InviteNotFoundExceptionHandler>();
-builder.Services.AddExceptionHandler<PlayerNotFoundInGameExceptionHandler>();
-builder.Services.AddExceptionHandler<PositionAtTableAlreadyTakenExceptionHandler>();
-builder.Services.AddExceptionHandler<UnauthorizedGameActionExceptionHandler>();
-builder.Services.AddExceptionHandler<UserAlreadyPartOfTheTableExceptionHandler>();
 builder.Services.AddSingleton<Random>();
 
 builder.Services.AddLogging();
