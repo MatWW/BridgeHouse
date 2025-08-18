@@ -1,8 +1,5 @@
 # :spades: BridgeHouse - backend for real-time multiplayer bridge playing platform
 
-## :spiral_notepad: Note
-Although this repository contains frontend, currently it is not finished, therefore consider this project as **backend project** by now. 
-
 ## :star: Overview
 
 Backend for real-time multiplayer bridge playing platform, that provides REST API for following functionalities:
