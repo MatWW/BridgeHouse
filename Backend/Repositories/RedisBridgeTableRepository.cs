@@ -1,7 +1,7 @@
 ﻿using StackExchange.Redis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Shared.Models;
+using Backend.Models;
 
 namespace Backend.Repositories;
 
