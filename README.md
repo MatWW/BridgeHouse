@@ -9,7 +9,7 @@ Backend for real-time multiplayer bridge playing platform, that provides REST AP
 - JWT auth: registration, login, logout
 - creating and deleting game tables
 - inviting users to a table, accepting/declining invites, leaving table
-- playing full game of bridge (pacing bid, playing cards etc.)
+- playing full game of bridge (placing bid, playing cards etc.)
 - seeing your game history
 - getting information abour user, game etc. that will be needed for fullstack application to work
 
