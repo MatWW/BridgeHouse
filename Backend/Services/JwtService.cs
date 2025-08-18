@@ -17,7 +17,7 @@ public class JwtService : IJwtService
 
     private readonly JwtSecurityTokenHandler _tokenHandler = new();
 
-    public JwtService(IConfiguration configuration)
+    public JwtService(IConfiguration configuration, TokenValidationParameters tokenValidationParameters)
     {
         _secret = configuration["Jwt:Secret"]
                   ?? throw new ArgumentNullException(nameof(configuration), "Jwt:Secret is missing");
@@ -28,18 +28,7 @@ public class JwtService : IJwtService
         _accessExpirationMinutes = configuration.GetValue("Jwt:ExpirationInMinutes", 1);
         _refreshExpirationMinutes = configuration.GetValue("Jwt:RefreshToken:ExpirationInMinutes", 60 * 24 * 7);
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
-        _tokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = key,
-            ValidateIssuer = true,
-            ValidIssuer = _issuer,
-            ValidateAudience = true,
-            ValidAudience = _audience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
-        };
+        _tokenValidationParameters = tokenValidationParameters;
     }
 
     public string GenerateAccessToken(User user) => GenerateToken(user, _accessExpirationMinutes);
