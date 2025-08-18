@@ -3,7 +3,7 @@ using Backend.Exceptions;
 using Backend.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using Shared.DTOs;
+using Backend.DTOs;
 using System.Security.Authentication;
 
 namespace Backend.Services;

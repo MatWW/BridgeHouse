@@ -1,8 +1,8 @@
 ﻿using Backend.Exceptions;
 using Backend.Repositories;
-using Shared.Enums;
-using Shared.Enums.Extensions;
-using Shared.Models;
+using Backend.Enums;
+using Backend.Enums.Extensions;
+using Backend.Models;
 
 namespace Backend.Services;
 

@@ -1,8 +1,8 @@
 ﻿using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Shared.DTOs;
-using Shared.Models;
+using Backend.DTOs;
+using Backend.Models;
 
 namespace Backend.Controllers;
 

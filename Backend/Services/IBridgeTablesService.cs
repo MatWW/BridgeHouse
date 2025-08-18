@@ -1,6 +1,6 @@
-﻿using Shared.DTOs;
-using Shared.Enums;
-using Shared.Models;
+﻿using Backend.DTOs;
+using Backend.Enums;
+using Backend.Models;
 
 namespace Backend.Services;
 

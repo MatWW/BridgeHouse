@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{2AB49E9A-7551-4D40-BD05-99074B32F9FC}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend", "Backend\Backend.csproj", "{D3D6B6EF-3297-47B9-93BD-75CDDC38E0ED}"
 EndProject
 Global
@@ -13,10 +11,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2AB49E9A-7551-4D40-BD05-99074B32F9FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2AB49E9A-7551-4D40-BD05-99074B32F9FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2AB49E9A-7551-4D40-BD05-99074B32F9FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2AB49E9A-7551-4D40-BD05-99074B32F9FC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D3D6B6EF-3297-47B9-93BD-75CDDC38E0ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D3D6B6EF-3297-47B9-93BD-75CDDC38E0ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3D6B6EF-3297-47B9-93BD-75CDDC38E0ED}.Release|Any CPU.ActiveCfg = Release|Any CPU

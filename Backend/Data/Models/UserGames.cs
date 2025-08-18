@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Shared.Enums;
+using Backend.Enums;
 
 namespace Backend.Data.Models;
 
