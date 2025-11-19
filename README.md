@@ -23,15 +23,16 @@ All of requests are available only to eligible users and must be valid (eg. one 
 ## :globe_with_meridians: API endpoints
 
 API provides following endpoints:
-- POST /api/authentication/register
-- POST /api/authentication/login
-- POST /api/authentication/logout
+- POST /api/auth/register
+- POST /api/auth/login
+- POST /api/auth/refresh-token
+- POST /api/auth/logout
 
 - GET /api/bridge-tables/{id}
 - POST /api/bridge-tables
 - DELETE /api/bridge-tables/{id}
 - POST /api/bridge-tables/{id}/invitations
-- DELETE /api/bridge-tables/{id}/invitations
+- DELETE /api/bridge-tables/{id}/users/me
 
 - GET /api/games/{id}/bidding-state
 - GET /api/games/{id}/playing-state
